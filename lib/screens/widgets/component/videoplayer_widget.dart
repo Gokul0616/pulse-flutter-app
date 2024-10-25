@@ -203,7 +203,15 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return WillPopScope(
+        onWillPop: () async {
+          if (_isFullScreen) {
+            _toggleFullScreen(); // Exit full screen, stay in landscape
+            return false; // Prevent exiting the page
+          }
+          return true; // Allow exiting the page
+        },
+        child: Scaffold(
       backgroundColor: Colors.black,
       body: SafeArea(
         child: OrientationBuilder(
@@ -335,6 +343,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           },
         ),
       ),
+        )
     );
   }
 
