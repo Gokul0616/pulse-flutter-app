@@ -23,7 +23,10 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   bool _controlsVisible = true;
   Timer? _controlsTimer;
   bool _isVideoCompleted = false;
-
+  bool _showSeekBackwardIndicator = false;
+  bool _showSeekForwardIndicator = false;
+  Timer? _seekIndicatorTimer;
+  bool _isBuffering = false;
   @override
   void initState() {
     super.initState();
@@ -40,12 +43,20 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
             _videoPlayerController.value.duration) {
           setState(() {
             _isVideoCompleted = true;
-            _controlsVisible = true; // Show controls when video is completed
-            _controlsTimer?.cancel(); // Prevent the timer from hiding controls
+            _controlsVisible = true;
+            _controlsTimer?.cancel();
           });
         } else if (_videoPlayerController.value.isPlaying) {
           setState(() {
             _isVideoCompleted = false;
+          });
+        } else if (_videoPlayerController.value.isBuffering) {
+          setState(() {
+            _isBuffering = true;
+          });
+        } else {
+          setState(() {
+            _isBuffering = false;
           });
         }
       });
@@ -56,7 +67,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         autoPlay: true,
         looping: false,
         allowFullScreen: false,
-        showControls: false, // We handle controls manually
+        showControls: false,
         autoInitialize: true,
       );
 
@@ -80,6 +91,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     _videoPlayerController.dispose();
     _chewieController?.dispose();
     _controlsTimer?.cancel();
+    _seekIndicatorTimer?.cancel();
     super.dispose();
   }
 
@@ -90,9 +102,11 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     });
 
     if (_isFullScreen) {
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.leanBack);
+      // Hide status and navigation bars in immersive mode
+      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
       SystemChrome.setPreferredOrientations([DeviceOrientation.landscapeLeft]);
     } else {
+      // Restore status and navigation bars
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
       SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     }
@@ -104,45 +118,79 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     });
 
     if (_controlsVisible) {
-      _startControlsTimer(); // Only start timer when controls are shown
+      _startControlsTimer();
     } else {
-      _controlsTimer?.cancel(); // Cancel timer when hiding controls
+      _controlsTimer?.cancel();
     }
   }
 
   void _onTap() {
-    _toggleControls(); // Show or hide controls when tapped
+    _toggleControls();
   }
 
-  void _doubleTapPlayPause() {
+  void _doubleTap(TapDownDetails details) {
+    final screenWidth = MediaQuery.of(context).size.width;
+    final tapPosition = details.localPosition.dx;
+
+    if (tapPosition < screenWidth / 2) {
+      _seekBackward();
+    } else {
+      _seekForward();
+    }
+  }
+
+  void _seekBackward() {
+    final currentPosition = _videoPlayerController.value.position;
+    final newPosition = currentPosition - const Duration(seconds: 10);
+
+    _videoPlayerController
+        .seekTo(newPosition > Duration.zero ? newPosition : Duration.zero);
+
+    // Show the backward indicator
     setState(() {
-      if (_isVideoCompleted) {
-        _videoPlayerController.seekTo(Duration.zero);
-        _videoPlayerController.play();
-        _isVideoCompleted = false;
-      } else {
-        _videoPlayerController.value.isPlaying
-            ? _videoPlayerController.pause()
-            : _videoPlayerController.play();
-      }
+      _showSeekBackwardIndicator = true;
     });
 
-    // Restart controls timer only when user interacts
-    if (_controlsVisible) {
-      _startControlsTimer();
+    _hideSeekIndicator();
+  }
+
+  void _seekForward() {
+    final currentPosition = _videoPlayerController.value.position;
+    final duration = _videoPlayerController.value.duration;
+    final newPosition = currentPosition + const Duration(seconds: 10);
+
+    if (newPosition < duration) {
+      _videoPlayerController.seekTo(newPosition);
+    } else {
+      _videoPlayerController.seekTo(duration);
     }
+
+    // Show the forward indicator
+    setState(() {
+      _showSeekForwardIndicator = true;
+    });
+
+    _hideSeekIndicator();
+  }
+
+  void _hideSeekIndicator() {
+    _seekIndicatorTimer?.cancel();
+    _seekIndicatorTimer = Timer(const Duration(milliseconds: 500), () {
+      setState(() {
+        _showSeekBackwardIndicator = false;
+        _showSeekForwardIndicator = false;
+      });
+    });
   }
 
   void _startControlsTimer() {
     _controlsTimer?.cancel();
     _controlsTimer = Timer(const Duration(seconds: 3), () {
       setState(() {
-        _controlsVisible = false; // Hide controls after 3 seconds
+        _controlsVisible = false;
       });
     });
   }
-
-  void test() {}
 
   @override
   Widget build(BuildContext context) {
@@ -153,12 +201,13 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           builder: (context, orientation) {
             return GestureDetector(
               onTap: _onTap,
-              onDoubleTap: _doubleTapPlayPause,
+              onDoubleTapDown: _doubleTap,
               child: Stack(
                 children: [
                   if (_isLoading)
                     const Center(
-                        child: CircularProgressIndicator(color: Colors.red))
+                      child: CircularProgressIndicator(color: Colors.red),
+                    )
                   else if (_isError)
                     Padding(
                       padding: const EdgeInsets.all(20.0),
@@ -170,12 +219,73 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                   else if (orientation == Orientation.portrait &&
                       _chewieController != null)
                     SizedBox(
-                      height: MediaQuery.of(context).size.height * 0.3,
+                      height: MediaQuery.of(context).size.height * 0.25,
                       width: MediaQuery.of(context).size.width,
                       child: Chewie(controller: _chewieController!),
                     )
                   else if (_chewieController != null)
                     Chewie(controller: _chewieController!),
+
+                  // Seek indicators for double-tap
+                  if ((_showSeekBackwardIndicator ||
+                          _showSeekForwardIndicator) &&
+                      !_isFullScreen)
+                    Positioned(
+                      top: MediaQuery.of(context).size.height / 8.5,
+                      left: _showSeekBackwardIndicator ? 50 : null,
+                      right: _showSeekForwardIndicator ? 50 : null,
+                      child: Icon(
+                        _showSeekBackwardIndicator
+                            ? Icons.fast_rewind
+                            : Icons.fast_forward,
+                        size: 40,
+                        color: Colors.white,
+                      ),
+                    ),
+                  if ((_showSeekBackwardIndicator ||
+                          _showSeekForwardIndicator) &&
+                      _isFullScreen)
+                    Positioned(
+                      top: MediaQuery.of(context).size.height / 2 - 40,
+                      left: _showSeekBackwardIndicator ? 50 : null,
+                      right: _showSeekForwardIndicator ? 50 : null,
+                      child: Icon(
+                        _showSeekBackwardIndicator
+                            ? Icons.fast_rewind
+                            : Icons.fast_forward,
+                        size: 80,
+                        color: Colors.white,
+                      ),
+                    ),
+
+                  // Loading indicator for buffering - adjusted position
+                  if (_isBuffering && !_isFullScreen)
+                    Positioned(
+                      top: MediaQuery.of(context).size.height /
+                          8.5, // Center vertically
+                      left: MediaQuery.of(context).size.width / 2 -
+                          20, // Center horizontally
+                      child: Container(
+                        color: Colors
+                            .transparent, // Make the background transparent
+                        child:
+                            const CircularProgressIndicator(color: Colors.red),
+                      ),
+                    ),
+                  if (_isBuffering && _isFullScreen)
+                    Positioned(
+                      top: MediaQuery.of(context).size.height / 2 -
+                          20, // Center vertically
+                      left: MediaQuery.of(context).size.width / 2 -
+                          20, // Center horizontally
+                      child: Container(
+                        color: Colors
+                            .transparent, // Make the background transparent
+                        child:
+                            const CircularProgressIndicator(color: Colors.red),
+                      ),
+                    ),
+
                   if (!_isFullScreen && _controlsVisible)
                     Positioned(
                       top: 16,
@@ -186,7 +296,26 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                         child: IconButton(
                           icon:
                               const Icon(Icons.arrow_back, color: Colors.white),
-                          onPressed: () => Navigator.pop(context),
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                        ),
+                      ),
+                    ),
+                  if (_isFullScreen && _controlsVisible)
+                    Positioned(
+                      top: 16,
+                      left: 16,
+                      child: Material(
+                        color: Colors.transparent,
+                        borderRadius: BorderRadius.circular(50),
+                        child: IconButton(
+                          icon:
+                              const Icon(Icons.arrow_back, color: Colors.white),
+                          onPressed: () {
+                            Navigator.pop(context);
+                            _toggleFullScreen();
+                          },
                         ),
                       ),
                     ),
@@ -236,24 +365,19 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                   onPressed: () {
                     setState(() {
                       if (_isVideoCompleted) {
-                        // Reset video to the start and play
                         _isVideoCompleted = false;
                         _videoPlayerController.seekTo(Duration.zero);
                         _videoPlayerController.play();
-                        test();
                       } else {
-                        // Toggle play/pause state
                         _videoPlayerController.value.isPlaying
                             ? _videoPlayerController.pause()
                             : _videoPlayerController.play();
                       }
                     });
 
-                    // If controls are visible, restart the timer to hide them after interaction
                     if (_controlsVisible) {
                       _startControlsTimer();
                     } else if (_isVideoCompleted) {
-                      // If the video was completed and replayed, restart the timer
                       _startControlsTimer();
                     }
                   },
