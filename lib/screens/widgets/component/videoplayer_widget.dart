@@ -44,15 +44,24 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           setState(() {
             _isVideoCompleted = true;
             _controlsVisible = true;
+            _isBuffering = false;
+
             _controlsTimer?.cancel();
           });
         } else if (_videoPlayerController.value.isPlaying) {
           setState(() {
             _isVideoCompleted = false;
+            _isBuffering = false;
           });
-        } else if (_videoPlayerController.value.isBuffering) {
+        } else if (_videoPlayerController.value.isBuffering &&
+            !_isVideoCompleted) {
           setState(() {
             _isBuffering = true;
+          });
+        } else if (_videoPlayerController.value.isPlaying &&
+            !_isVideoCompleted) {
+          setState(() {
+            _startControlsTimer();
           });
         } else {
           setState(() {
@@ -288,7 +297,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
                   if (!_isFullScreen && _controlsVisible)
                     Positioned(
-                      top: 16,
+                      top: MediaQuery.of(context).size.height * 0.01,
                       left: 16,
                       child: Material(
                         color: Colors.transparent,
@@ -304,7 +313,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                     ),
                   if (_isFullScreen && _controlsVisible)
                     Positioned(
-                      top: 16,
+                      top: MediaQuery.of(context).size.height * 0.01,
                       left: 16,
                       child: Material(
                         color: Colors.transparent,
@@ -331,7 +340,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   Widget _buildControls() {
     if (_chewieController == null) return const SizedBox.shrink();
-
     return Positioned(
       bottom: 0,
       left: 0,
