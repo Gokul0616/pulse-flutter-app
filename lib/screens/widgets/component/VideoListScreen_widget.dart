@@ -14,9 +14,25 @@ class VideoListScreen extends StatelessWidget {
           onTap: () {
             Navigator.push(
               context,
-              MaterialPageRoute(
-                builder: (context) =>
+              PageRouteBuilder(
+                pageBuilder: (context, animation, secondaryAnimation) =>
                     VideoPlayerScreen(videoUrl: videoItem.url),
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
+                  const begin = Offset(0.0, 1.0); // Bottom to top
+                  const end = Offset.zero;
+                  const curve = Curves.easeInOut;
+
+                  var tween = Tween(begin: begin, end: end)
+                      .chain(CurveTween(curve: curve));
+                  var offsetAnimation = animation.drive(tween);
+
+                  return SlideTransition(
+                    position: offsetAnimation,
+                    child: child,
+                  );
+                },
+                reverseTransitionDuration: const Duration(milliseconds: 300),
               ),
             );
           },

@@ -61,7 +61,9 @@ class _HomeWidgetState extends State<HomeWidget> {
         automaticallyImplyLeading: false,
         actions: [
           IconButton(
-            icon: const Icon(Icons.message),
+            icon: const Icon(Icons.favorite_border_outlined),
+            color: Colors.black,
+            iconSize: 26,
             onPressed: () {
               // Navigate to direct messages (optional)
             },

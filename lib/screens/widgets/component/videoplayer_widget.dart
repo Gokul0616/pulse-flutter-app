@@ -182,6 +182,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     _hideSeekIndicator();
   }
 
+
   void _hideSeekIndicator() {
     _seekIndicatorTimer?.cancel();
     _seekIndicatorTimer = Timer(const Duration(milliseconds: 500), () {
@@ -346,8 +347,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         )
     );
   }
-
-  Widget _buildControls() {
+Widget _buildControls() {
     if (_chewieController == null) return const SizedBox.shrink();
     return Positioned(
       bottom: 0,
@@ -358,15 +358,36 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         padding: const EdgeInsets.all(10.0),
         child: Column(
           children: [
-            VideoProgressIndicator(
+            // Row to show the current position and duration
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Current playback time
+                Text(
+                  _formatDuration(_videoPlayerController.value.position),
+                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                ),
+                // Total video duration
+                Text(
+                  _formatDuration(_videoPlayerController.value.duration),
+                  style: const TextStyle(color: Colors.white, fontSize: 14),
+                ),
+              ],
+            ),
+            // Seek bar
+            SizedBox(
+              width: MediaQuery.of(context).size.width * 0.9,
+              child: VideoProgressIndicator(
               _chewieController!.videoPlayerController,
               allowScrubbing: true,
               colors: const VideoProgressColors(
                 playedColor: Colors.red,
                 bufferedColor: Colors.grey,
-                backgroundColor: Colors.transparent,
+                  backgroundColor: Colors.blueGrey,
+              ),
               ),
             ),
+            // Control buttons (play/pause, full-screen toggle)
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
@@ -412,5 +433,13 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         ),
       ),
     );
+  }
+
+// Helper function to format duration into mm:ss
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, "0");
+    final minutes = twoDigits(duration.inMinutes.remainder(60));
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return "$minutes:$seconds";
   }
 }
