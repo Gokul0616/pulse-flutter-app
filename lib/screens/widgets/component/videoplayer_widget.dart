@@ -1,4 +1,5 @@
 import 'package:Pulse/screens/widgets/component/VideoListScreen_widget.dart';
+import 'package:Pulse/screens/widgets/component/post_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
@@ -30,8 +31,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   Timer? _seekIndicatorTimer;
   bool _isLocked = false;
   bool _isBuffering = false;
-  final PageController _pageController = PageController();
-  int _currentPageIndex = 0; // Track the current page index
+  // final PageController _pageController = PageController();
+  // int _currentPageIndex = 0; // Track the current page index
   bool isPlaybackPage = false;
 
   // Playback speed options
@@ -45,7 +46,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     1.75,
     2.0
   ];
-  double _currentPlaybackSpeed = 1.0; // Default playback speed
+  double _currentPlaybackSpeed = 1.0;
 
   @override
   void initState() {
@@ -214,14 +215,38 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     _toggleControls();
   }
 
+//   void _doubleTap(TapDownDetails details) {
+//     final screenWidth = MediaQuery.of(context).size.width;
+//     final screenHeight =  MediaQuery.of(context).size.height * 0.25;
+//     final tapPosition = details.localPosition.dx;
+// if()
+//     if (tapPosition < screenWidth / 2) {
+//       _seekBackward();
+//     } else {
+//       _seekForward();
+//     }
+//   }
   void _doubleTap(TapDownDetails details) {
     final screenWidth = MediaQuery.of(context).size.width;
-    final tapPosition = details.localPosition.dx;
+    final screenHeight = MediaQuery.of(context).size.height *
+        0.25; // Only use the top 25% of the screen
+    final tapPosition = details.localPosition; // Get both x and y positions
 
-    if (tapPosition < screenWidth / 2) {
-      _seekBackward();
+    // Check if the tap is within the top 25% of the screen and left or right half
+    if (_isFullScreen) {
+      if (tapPosition.dx < screenWidth / 2) {
+        _seekBackward();
+      } else {
+        _seekForward();
+      }
     } else {
-      _seekForward();
+      if (tapPosition.dy < screenHeight) {
+        if (tapPosition.dx < screenWidth / 2) {
+          _seekBackward(); // Seek backward if tap is on the left half
+        } else {
+          _seekForward(); // Seek forward if tap is on the right half
+        }
+      }
     }
   }
 
@@ -424,7 +449,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       },
     );
   }
-@override
+
+  @override
   Widget build(BuildContext context) {
     return WillPopScope(
       onWillPop: () async {
@@ -642,6 +668,58 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                                   },
                                 ),
                                 // Add more VideoItem objects as needed
+                                PostWidget(
+                                  userName: "Username",
+                                  postTime: "10 minutes ago",
+                                  userProfileUrl:
+                                      "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0",
+                                  postUrl:
+                                      "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0",
+                                  isLiked: true,
+                                  onLikeToggle: () {
+                                    // setState(() {
+                                    //   isLiked = !isLiked; // Toggle like state
+                                    // });
+                                  },
+                                  onCommentPressed: () {
+                                    // Handle comment press logic
+                                  },
+                                ),
+                                VideoListScreen(
+                                  videoItems: [
+                                    VideoItem(
+                                      url:
+                                          'https://getsamplefiles.com/download/mp4/sample-4.mp4',
+                                      thumbnailUrl:
+                                          'https://via.placeholder.com/120x90.png?text=Thumbnail1',
+                                      title: 'Sample Video 4',
+                                      channelName: 'Channel 1',
+                                      duration: '3:45',
+                                    ),
+                                    VideoItem(
+                                      url:
+                                          'https://getsamplefiles.com/download/mp4/sample-4.mp4',
+                                      thumbnailUrl:
+                                          'https://via.placeholder.com/120x90.png?text=Thumbnail1',
+                                      title: 'Sample Video 4',
+                                      channelName: 'Channel 1',
+                                      duration: '3:45',
+                                    ),
+                                    VideoItem(
+                                      url:
+                                          'https://getsamplefiles.com/download/mp4/sample-4.mp4',
+                                      thumbnailUrl:
+                                          'https://via.placeholder.com/120x90.png?text=Thumbnail1',
+                                      title: 'Sample Video 4',
+                                      channelName: 'Channel 1',
+                                      duration: '3:45',
+                                    ),
+                                    // Add more VideoItem objects as needed
+                                  ],
+                                  onVideoClicked: (VideoItem) {
+                                    Navigator.pop(context);
+                                  },
+                                ),
                               ],
                             ),
                           ),
@@ -657,18 +735,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     );
   }
 
-
 // Function to handle video tap
-  void _handleVideoTap(String url) {
-    // Logic to update the video player with the new video URL
-    setState(() {
-      // Update the controller or state here
-      _chewieController = ChewieController(
-        videoPlayerController: VideoPlayerController.network(url),
-        // Additional configuration...
-      );
-    });
-  }
 
   Widget _buildControls() {
     if (_chewieController == null) return const SizedBox.shrink();
