@@ -424,180 +424,239 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       },
     );
   }
-
-  @override
+@override
   Widget build(BuildContext context) {
     return WillPopScope(
-        onWillPop: () async {
-          if (_isFullScreen) {
-            _toggleFullScreen(); // Exit full screen, stay in landscape
-            return false; // Prevent exiting the page
-          }
-          return true; // Allow exiting the page
-        },
-        child: Scaffold(
-          backgroundColor: Colors.black,
-          body: SafeArea(
-            child: OrientationBuilder(
-              builder: (context, orientation) {
-                return GestureDetector(
-                  onTap: _isLocked
-                      ? _showLockIcon
-                      : _onTap, // Show lock icon if locked
-                  onDoubleTapDown: _isLocked ? null : _doubleTap,
-                  child: Stack(
-                    children: [
-                      if (_isLoading)
-                        const Center(
-                          child: CircularProgressIndicator(color: Colors.red),
-                        )
-                      else if (_isError)
-                        Padding(
-                          padding: const EdgeInsets.all(20.0),
-                          child: Text(
-                            'Error loading video: $_errorMessage',
-                            style: const TextStyle(color: Colors.red),
-                          ),
-                        )
-                      else if (orientation == Orientation.portrait &&
-                          _chewieController != null)
+      onWillPop: () async {
+        if (_isFullScreen) {
+          _toggleFullScreen(); // Exit full screen, stay in landscape
+          return false; // Prevent exiting the page
+        }
+        return true; // Allow exiting the page
+      },
+      child: Scaffold(
+        backgroundColor: Colors.black,
+        body: SafeArea(
+          child: Stack(
+            children: [
+              OrientationBuilder(
+                builder: (context, orientation) {
+                  return GestureDetector(
+                    onTap: _isLocked
+                        ? _showLockIcon
+                        : _onTap, // Show lock icon if locked
+                    onDoubleTapDown: _isLocked ? null : _doubleTap,
+                    child: Column(
+                      children: [
+                        // Video Player
                         SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.25,
+                          height: orientation == Orientation.portrait
+                              ? MediaQuery.of(context).size.height * 0.25
+                              : MediaQuery.of(context).size.height,
                           width: MediaQuery.of(context).size.width,
-                          child: Chewie(controller: _chewieController!),
-                        )
-                      else if (_chewieController != null)
-                        Chewie(controller: _chewieController!),
+                          child: Stack(
+                            children: [
+                              if (_isLoading)
+                                const Center(
+                                  child: CircularProgressIndicator(
+                                      color: Colors.red),
+                                )
+                              else if (_isError)
+                                Padding(
+                                  padding: const EdgeInsets.all(20.0),
+                                  child: Text(
+                                    'Error loading video: $_errorMessage',
+                                    style: const TextStyle(color: Colors.red),
+                                  ),
+                                )
+                              else if (_chewieController != null)
+                                Chewie(controller: _chewieController!),
 
-                      // Seek indicators for double-tap
-                      if ((_showSeekBackwardIndicator ||
-                              _showSeekForwardIndicator) &&
-                          !_isFullScreen)
-                        Positioned(
-                          top: MediaQuery.of(context).size.height / 8.5,
-                          left: _showSeekBackwardIndicator ? 50 : null,
-                          right: _showSeekForwardIndicator ? 50 : null,
-                          child: Icon(
-                            _showSeekBackwardIndicator
-                                ? Icons.fast_rewind
-                                : Icons.fast_forward,
-                            size: 40,
-                            color: Colors.white,
-                          ),
-                        ),
-                      if ((_showSeekBackwardIndicator ||
-                              _showSeekForwardIndicator) &&
-                          _isFullScreen)
-                        Positioned(
-                          top: MediaQuery.of(context).size.height / 2 - 40,
-                          left: _showSeekBackwardIndicator ? 50 : null,
-                          right: _showSeekForwardIndicator ? 50 : null,
-                          child: Icon(
-                            _showSeekBackwardIndicator
-                                ? Icons.fast_rewind
-                                : Icons.fast_forward,
-                            size: 80,
-                            color: Colors.white,
-                          ),
-                        ),
-                      // Lock Icon displayed at top right if video controls are locked
-                      if (_isLocked)
-                        Positioned(
-                          top: MediaQuery.of(context).size.height * 0.01,
-                          right: 16,
-                          child: IconButton(
-                            icon: Icon(Icons.lock, color: Colors.white),
-                            onPressed: _toggleLock,
+                              // Seek indicators for double-tap
+                              if ((_showSeekBackwardIndicator ||
+                                      _showSeekForwardIndicator) &&
+                                  !_isFullScreen)
+                                Positioned(
+                                  top: MediaQuery.of(context).size.height / 8.5,
+                                  left: _showSeekBackwardIndicator ? 50 : null,
+                                  right: _showSeekForwardIndicator ? 50 : null,
+                                  child: Icon(
+                                    _showSeekBackwardIndicator
+                                        ? Icons.fast_rewind
+                                        : Icons.fast_forward,
+                                    size: 40,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              if ((_showSeekBackwardIndicator ||
+                                      _showSeekForwardIndicator) &&
+                                  _isFullScreen)
+                                Positioned(
+                                  top: MediaQuery.of(context).size.height / 2 -
+                                      40,
+                                  left: _showSeekBackwardIndicator ? 50 : null,
+                                  right: _showSeekForwardIndicator ? 50 : null,
+                                  child: Icon(
+                                    _showSeekBackwardIndicator
+                                        ? Icons.fast_rewind
+                                        : Icons.fast_forward,
+                                    size: 80,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              // Lock Icon displayed at top right if video controls are locked
+                              if (_isLocked)
+                                Positioned(
+                                  top:
+                                      MediaQuery.of(context).size.height * 0.01,
+                                  right: 16,
+                                  child: IconButton(
+                                    icon: Icon(Icons.lock, color: Colors.white),
+                                    onPressed: _toggleLock,
+                                  ),
+                                ),
+
+                              // Loading indicator for buffering - adjusted position
+                              if (_isBuffering && !_isFullScreen)
+                                Positioned(
+                                  top: MediaQuery.of(context).size.height /
+                                      8.5, // Center vertically
+                                  left: MediaQuery.of(context).size.width / 2 -
+                                      20, // Center horizontally
+                                  child: Container(
+                                    color: Colors
+                                        .transparent, // Make the background transparent
+                                    child: const CircularProgressIndicator(
+                                        color: Colors.red),
+                                  ),
+                                ),
+                              if (_isBuffering && _isFullScreen)
+                                Positioned(
+                                  top: MediaQuery.of(context).size.height / 2 -
+                                      20, // Center vertically
+                                  left: MediaQuery.of(context).size.width / 2 -
+                                      20, // Center horizontally
+                                  child: Container(
+                                    color: Colors
+                                        .transparent, // Make the background transparent
+                                    child: const CircularProgressIndicator(
+                                        color: Colors.red),
+                                  ),
+                                ),
+
+                              if (!_isFullScreen && _controlsVisible)
+                                Positioned(
+                                  top:
+                                      MediaQuery.of(context).size.height * 0.01,
+                                  left: 16,
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    borderRadius: BorderRadius.circular(50),
+                                    child: IconButton(
+                                      icon: const Icon(Icons.arrow_back,
+                                          color: Colors.white),
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              if (_isFullScreen && _controlsVisible)
+                                Positioned(
+                                  top:
+                                      MediaQuery.of(context).size.height * 0.01,
+                                  left: 16,
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    borderRadius: BorderRadius.circular(50),
+                                    child: IconButton(
+                                      icon: const Icon(Icons.arrow_back,
+                                          color: Colors.white),
+                                      onPressed: () {
+                                        Navigator.pop(context);
+                                        _toggleFullScreen();
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              if (_controlsVisible && !_isLoading)
+                                Positioned(
+                                  top:
+                                      MediaQuery.of(context).size.height * 0.01,
+                                  right: 16,
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    borderRadius: BorderRadius.circular(50),
+                                    child: IconButton(
+                                      icon: const Icon(Icons.settings,
+                                          color: Colors.white),
+                                      onPressed: () {
+                                        _openSettingsBottomSheet();
+                                      },
+                                    ),
+                                  ),
+                                ),
+                              if (_controlsVisible) _buildControls(),
+                            ],
                           ),
                         ),
 
-                      // Loading indicator for buffering - adjusted position
-                      if (_isBuffering && !_isFullScreen)
-                        Positioned(
-                          top: MediaQuery.of(context).size.height /
-                              8.5, // Center vertically
-                          left: MediaQuery.of(context).size.width / 2 -
-                              20, // Center horizontally
-                          child: Container(
-                            color: Colors
-                                .transparent, // Make the background transparent
-                            child: const CircularProgressIndicator(
-                                color: Colors.red),
-                          ),
-                        ),
-                      if (_isBuffering && _isFullScreen)
-                        Positioned(
-                          top: MediaQuery.of(context).size.height / 2 -
-                              20, // Center vertically
-                          left: MediaQuery.of(context).size.width / 2 -
-                              20, // Center horizontally
-                          child: Container(
-                            color: Colors
-                                .transparent, // Make the background transparent
-                            child: const CircularProgressIndicator(
-                                color: Colors.red),
-                          ),
-                        ),
-
-                      if (!_isFullScreen && _controlsVisible)
-                        Positioned(
-                          top: MediaQuery.of(context).size.height * 0.01,
-                          left: 16,
-                          child: Material(
-                            color: Colors.transparent,
-                            borderRadius: BorderRadius.circular(50),
-                            child: IconButton(
-                              icon: const Icon(Icons.arrow_back,
-                                  color: Colors.white),
-                              onPressed: () {
-                                Navigator.pop(context);
-                              },
+                        // Video List (Only visible in portrait mode)
+                        if (orientation == Orientation.portrait)
+                          Expanded(
+                            child: ListView(
+                              children: [
+                                VideoListScreen(
+                                  videoItems: [
+                                    VideoItem(
+                                      url:
+                                          'https://getsamplefiles.com/download/mp4/sample-4.mp4',
+                                      thumbnailUrl:
+                                          'https://via.placeholder.com/120x90.png?text=Thumbnail1',
+                                      title: 'Sample Video 4',
+                                      channelName: 'Channel 1',
+                                      duration: '3:45',
+                                    ),
+                                    VideoItem(
+                                      url:
+                                          'https://getsamplefiles.com/download/mp4/sample-4.mp4',
+                                      thumbnailUrl:
+                                          'https://via.placeholder.com/120x90.png?text=Thumbnail1',
+                                      title: 'Sample Video 4',
+                                      channelName: 'Channel 1',
+                                      duration: '3:45',
+                                    ),
+                                    VideoItem(
+                                      url:
+                                          'https://getsamplefiles.com/download/mp4/sample-4.mp4',
+                                      thumbnailUrl:
+                                          'https://via.placeholder.com/120x90.png?text=Thumbnail1',
+                                      title: 'Sample Video 4',
+                                      channelName: 'Channel 1',
+                                      duration: '3:45',
+                                    ),
+                                    // Add more VideoItem objects as needed
+                                  ],
+                                  onVideoClicked: (VideoItem) {
+                                    Navigator.pop(context);
+                                  },
+                                ),
+                                // Add more VideoItem objects as needed
+                              ],
                             ),
                           ),
-                        ),
-                      if (_isFullScreen && _controlsVisible)
-                        Positioned(
-                          top: MediaQuery.of(context).size.height * 0.01,
-                          left: 16,
-                          child: Material(
-                            color: Colors.transparent,
-                            borderRadius: BorderRadius.circular(50),
-                            child: IconButton(
-                              icon: const Icon(Icons.arrow_back,
-                                  color: Colors.white),
-                              onPressed: () {
-                                Navigator.pop(context);
-                                _toggleFullScreen();
-                              },
-                            ),
-                          ),
-                        ),
-                      if (_controlsVisible && !_isLoading)
-                        Positioned(
-                          top: MediaQuery.of(context).size.height * 0.01,
-                          right: 16,
-                          child: Material(
-                            color: Colors.transparent,
-                            borderRadius: BorderRadius.circular(50),
-                            child: IconButton(
-                              icon: const Icon(Icons.settings,
-                                  color: Colors.white),
-                              onPressed: () {
-                                _openSettingsBottomSheet();
-                              },
-                            ),
-                          ),
-                        ),
-
-                      if (_controlsVisible) _buildControls(),
-                    ],
-                  ),
-                );
-              },
-            ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ],
           ),
-        ));
+        ),
+      ),
+    );
   }
+
 
 // Function to handle video tap
   void _handleVideoTap(String url) {

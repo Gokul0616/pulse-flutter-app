@@ -21,8 +21,8 @@ class _HomeWidgetState extends State<HomeWidget> {
       // double scrollOffset = _scrollController.position.pixels;
       setState(() {
         // Update the color based on scroll position
-        _appBarBackgroundColor =const Color.fromARGB(255, 255, 255, 255);
-            // scrollOffset > 50 ? Colors.white : Colors.white;
+        _appBarBackgroundColor = const Color.fromARGB(255, 255, 255, 255);
+        // scrollOffset > 50 ? Colors.white : Colors.white;
       });
     });
   }
@@ -46,15 +46,16 @@ class _HomeWidgetState extends State<HomeWidget> {
               'assets/appImages/icon/icon.png', // Update this with your icon's path
               width: 55, // Adjust the width as needed
               height: 55, // Adjust the height as needed
-              color:Colors.black, // Change icon color
+              color: Colors.black, // Change icon color
             ),
             const Text(
               "Pulse",
               style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-                 color: Colors.black // Color remains static or you can change it too
-              ),
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors
+                      .black // Color remains static or you can change it too
+                  ),
             ),
           ],
         ),
@@ -104,6 +105,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                 ),
                 // Add more VideoItem objects as needed
               ],
+              onVideoClicked: (VideoItem) {},
             ),
           ),
           Container(
@@ -120,6 +122,7 @@ class _HomeWidgetState extends State<HomeWidget> {
                 ),
                 // Add more VideoItem objects as needed
               ],
+              onVideoClicked: (VideoItem) {},
             ),
           ),
           Container(
@@ -135,13 +138,14 @@ class _HomeWidgetState extends State<HomeWidget> {
                 ),
                 // Add more VideoItem objects as needed
               ],
+              onVideoClicked: (VideoItem) {},
             ),
           ),
-           Container(
+          Container(
             child: VideoListScreen(
               videoItems: [
                 VideoItem(
-                  url:     'https://getsamplefiles.com/download/mp4/sample-4.mp4',
+                  url: 'https://getsamplefiles.com/download/mp4/sample-4.mp4',
                   thumbnailUrl:
                       'https://via.placeholder.com/120x90.png?text=Thumbnail1',
                   title: 'Sample Video 4',
@@ -150,10 +154,12 @@ class _HomeWidgetState extends State<HomeWidget> {
                 ),
                 // Add more VideoItem objects as needed
               ],
+              onVideoClicked: (VideoItem) {},
             ),
           ),
         ],
       ),
     );
+ 
   }
 }

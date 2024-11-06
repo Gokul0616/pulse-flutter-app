@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 
 class VideoListScreen extends StatelessWidget {
   final List<VideoItem> videoItems;
+  final Function(VideoItem) onVideoClicked;
 
-  const VideoListScreen({super.key, required this.videoItems});
+  const VideoListScreen(
+      {super.key, required this.videoItems, required this.onVideoClicked});
 
   @override
   Widget build(BuildContext context) {
@@ -12,6 +14,7 @@ class VideoListScreen extends StatelessWidget {
       children: videoItems.map((videoItem) {
         return GestureDetector(
           onTap: () {
+            onVideoClicked(videoItem);
             Navigator.push(
               context,
               PageRouteBuilder(
