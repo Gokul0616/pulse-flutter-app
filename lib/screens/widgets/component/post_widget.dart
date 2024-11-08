@@ -6,8 +6,8 @@ class PostWidget extends StatelessWidget {
   final String userProfileUrl;
   final String postUrl;
   final bool isLiked;
-  final Function onLikeToggle;
-  final Function onCommentPressed;
+  final VoidCallback onLikeToggle;
+  final VoidCallback onCommentPressed;
 
   const PostWidget({
     super.key,
@@ -23,9 +23,7 @@ class PostWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onDoubleTap: () {
-        onLikeToggle();
-      },
+      onDoubleTap: onLikeToggle, // Double-tap to like the post
       child: Card(
         margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 15),
         elevation: 5,
@@ -79,15 +77,11 @@ class PostWidget extends StatelessWidget {
                           isLiked ? Icons.favorite : Icons.favorite_border,
                           color: isLiked ? Colors.pink : null,
                         ),
-                        onPressed: () {
-                          onLikeToggle();
-                        },
+                        onPressed: onLikeToggle,
                       ),
                       IconButton(
                         icon: const Icon(Icons.comment_outlined),
-                        onPressed: () {
-                          onCommentPressed();
-                        },
+                        onPressed: onCommentPressed,
                       ),
                       IconButton(
                         icon: const Icon(Icons.share),
@@ -106,11 +100,11 @@ class PostWidget extends StatelessWidget {
                 ],
               ),
             ),
-            // Likes and comments count
+            // Likes count
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 8.0),
               child: Text(
-                "123 likes", // This can be modified to accept a like count
+                "123 likes", // Consider accepting a like count to display
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),

@@ -5,8 +5,11 @@ class VideoListScreen extends StatelessWidget {
   final List<VideoItem> videoItems;
   final Function(VideoItem) onVideoClicked;
 
-  const VideoListScreen(
-      {super.key, required this.videoItems, required this.onVideoClicked});
+  const VideoListScreen({
+    super.key,
+    required this.videoItems,
+    required this.onVideoClicked,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -40,63 +43,107 @@ class VideoListScreen extends StatelessWidget {
             );
           },
           child: Container(
-            margin: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+            margin:
+                const EdgeInsets.symmetric(vertical: 12.0, horizontal: 16.0),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(8.0),
+              borderRadius: BorderRadius.circular(12.0),
               boxShadow: const [
                 BoxShadow(
                   color: Colors.black12,
-                  blurRadius: 4.0,
-                  offset: Offset(0, 2),
+                  blurRadius: 6.0,
+                  offset: Offset(0, 4),
                 ),
               ],
             ),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8.0),
-                    child: Image.network(
-                      videoItem.thumbnailUrl,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  videoItem.title,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 2,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        videoItem.channelName,
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 14,
-                        ),
+                // User info section
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      vertical: 12.0, horizontal: 16.0),
+                  color: Colors
+                      .grey[100], // Lighter background to match with title
+                  child: Row(
+                    children: [
+                      CircleAvatar(
+                        backgroundImage: NetworkImage(videoItem.userProfileUrl),
+                        radius: 16,
                       ),
-                    ),
-                    Text(
-                      formatDuration(videoItem.duration),
-                      style: const TextStyle(
-                        color: Colors.grey,
-                        fontSize: 12,
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            videoItem.userName,
+                            style: const TextStyle(
+                              color: Colors.black,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            '@${videoItem.userHandle}',
+                            style: const TextStyle(
+                              color: Colors.black54,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                // Video Thumbnail
+                Stack(
+                  alignment: Alignment.topCenter,
+                  children: [
+                    AspectRatio(
+                      aspectRatio: 16 / 9,
+                      child: ClipRRect(
+                        borderRadius: const BorderRadius.vertical(
+                          top: Radius.circular(12.0),
+                        ),
+                        child: Image.network(
+                          videoItem.thumbnailUrl,
+                          fit: BoxFit.cover,
+                          width: double.infinity,
+                        ),
                       ),
                     ),
                   ],
                 ),
-                const Divider(height: 1.0), // Add divider
+                // Video Title and details
+                Padding(
+                  padding: const EdgeInsets.all(12.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        videoItem.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black, // Title text color
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Text(
+                            '${videoItem.uploadTime} • ${videoItem.viewCount} views',
+                            style: const TextStyle(
+                              color: Colors.grey,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ],
             ),
           ),
@@ -106,9 +153,9 @@ class VideoListScreen extends StatelessWidget {
   }
 
   String formatDuration(String duration) {
-    int seconds = int.tryParse(duration) ?? 0; // Convert string to int
-    int minutes = seconds ~/ 60; // Get minutes
-    seconds = seconds % 60; // Get remaining seconds
+    int seconds = int.tryParse(duration) ?? 0;
+    int minutes = seconds ~/ 60;
+    seconds = seconds % 60;
 
     return "${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}";
   }
@@ -119,14 +166,22 @@ class VideoItem {
   final String url;
   final String thumbnailUrl;
   final String title;
-  final String channelName;
+  final String userProfileUrl;
+  final String userName;
+  final String userHandle;
+  final String uploadTime;
+  final String viewCount;
   final String duration;
 
   VideoItem({
     required this.url,
     required this.thumbnailUrl,
     required this.title,
-    required this.channelName,
+    required this.userProfileUrl,
+    required this.userName,
+    required this.userHandle,
+    required this.uploadTime,
+    required this.viewCount,
     required this.duration,
   });
 }

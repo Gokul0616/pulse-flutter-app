@@ -47,7 +47,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void _setTransparentUI() {
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
     SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent, // Make status bar transparent
+      statusBarColor: Colors.black, // Make status bar transparent
       systemNavigationBarColor: Colors.black, // Make navigation bar transparent
       statusBarIconBrightness:
           Brightness.light, // Change this based on light/dark theme

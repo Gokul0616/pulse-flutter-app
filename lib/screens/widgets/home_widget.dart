@@ -1,3 +1,4 @@
+import 'package:Pulse/screens/widgets/component/tweaks_widget.dart';
 import 'package:flutter/material.dart';
 import 'component/post_widget.dart';
 import 'package:Pulse/screens/widgets/component/VideoListScreen_widget.dart';
@@ -74,6 +75,32 @@ class _HomeWidgetState extends State<HomeWidget> {
       body: ListView(
         controller: _scrollController, // Attach scroll controller to ListView
         children: [
+          TweakWidget(
+            userName: "John Doe",
+            handle: "johndoe",
+            timeAgo: "2h",
+            userProfileUrl:
+                "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0",
+            tweakContent: "This is a sample tweak content!",
+            tweakImageUrl:
+                "https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+            isLiked: false,
+            likeCount: 123,
+            commentCount: 45,
+            retweakCount: 20,
+            onLikeToggle: () {
+              // Toggle like action
+            },
+            onCommentPressed: () {
+              // Navigate to comments
+            },
+            onRetweakPressed: () {
+              // Retweak action
+            },
+            onSharePressed: () {
+              // Share action
+            },
+          ),
           PostWidget(
             userName: "Username",
             postTime: "10 minutes ago",
@@ -91,16 +118,21 @@ class _HomeWidgetState extends State<HomeWidget> {
               // Handle comment press logic
             },
           ),
-          // Add more PostWidgets here
           Container(
             child: VideoListScreen(
               videoItems: [
                 VideoItem(
-                  url: 'https://download.samplelib.com/webm/sample-30s.webm',
+                  url:
+                      'https://onlinetestcase.com/wp-content/uploads/2023/06/15MB.mp4',
                   thumbnailUrl:
-                      'https://via.placeholder.com/120x90.png?text=Thumbnail1',
-                  title: 'Sample Video 1',
-                  channelName: 'Channel 1',
+                      'https://images.ctfassets.net/hrltx12pl8hq/28ECAQiPJZ78hxatLTa7Ts/2f695d869736ae3b0de3e56ceaca3958/free-nature-images.jpg?fit=fill&w=1200&h=630',
+                  title: 'Sample Video 2',
+                  userProfileUrl:
+                      'https://randomuser.me/api/portraits/men/32.jpg',
+                  userName: 'John Doe',
+                  userHandle: 'johndoe',
+                  uploadTime: '2 hours ago',
+                  viewCount: '1.2K',
                   duration: '3:45',
                 ),
                 // Add more VideoItem objects as needed
@@ -115,9 +147,14 @@ class _HomeWidgetState extends State<HomeWidget> {
                   url:
                       'https://onlinetestcase.com/wp-content/uploads/2023/06/15MB.mp4',
                   thumbnailUrl:
-                      'https://via.placeholder.com/120x90.png?text=Thumbnail1',
+                      'https://images.ctfassets.net/hrltx12pl8hq/28ECAQiPJZ78hxatLTa7Ts/2f695d869736ae3b0de3e56ceaca3958/free-nature-images.jpg?fit=fill&w=1200&h=630',
                   title: 'Sample Video 2',
-                  channelName: 'Channel 1',
+                  userProfileUrl:
+                      'https://randomuser.me/api/portraits/men/32.jpg',
+                  userName: 'John Doe',
+                  userHandle: 'johndoe',
+                  uploadTime: '2 hours ago',
+                  viewCount: '1.2K',
                   duration: '3:45',
                 ),
                 // Add more VideoItem objects as needed
@@ -125,37 +162,74 @@ class _HomeWidgetState extends State<HomeWidget> {
               onVideoClicked: (VideoItem) {},
             ),
           ),
-          Container(
-            child: VideoListScreen(
-              videoItems: [
-                VideoItem(
-                  url: 'https://www.w3schools.com/html/mov_bbb.mp4',
-                  thumbnailUrl:
-                      'https://via.placeholder.com/120x90.png?text=Thumbnail1',
-                  title: 'Sample Video 3',
-                  channelName: 'Channel 1',
-                  duration: '3:45',
-                ),
-                // Add more VideoItem objects as needed
-              ],
-              onVideoClicked: (VideoItem) {},
-            ),
+          PostWidget(
+            userName: "Username",
+            postTime: "10 minutes ago",
+            userProfileUrl:
+                "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0",
+            postUrl:
+                "https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885_640.jpg",
+            isLiked: isLiked,
+            onLikeToggle: () {
+              setState(() {
+                isLiked = !isLiked; // Toggle like state
+              });
+            },
+            onCommentPressed: () {
+              // Handle comment press logic
+            },
           ),
-          Container(
-            child: VideoListScreen(
-              videoItems: [
-                VideoItem(
-                  url: 'https://getsamplefiles.com/download/mp4/sample-4.mp4',
-                  thumbnailUrl:
-                      'https://via.placeholder.com/120x90.png?text=Thumbnail1',
-                  title: 'Sample Video 4',
-                  channelName: 'Channel 1',
-                  duration: '3:45',
-                ),
-                // Add more VideoItem objects as needed
-              ],
-              onVideoClicked: (VideoItem) {},
-            ),
+          TweakWidget(
+            userName: "John Doe",
+            handle: "johndoe",
+            timeAgo: "2h",
+            userProfileUrl:
+                "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0",
+            tweakContent: "First tweaks by Gokul",
+            tweakImageUrl:
+                "https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+            isLiked: false,
+            likeCount: 123,
+            commentCount: 45,
+            retweakCount: 20,
+            onLikeToggle: () {
+              // Toggle like action
+            },
+            onCommentPressed: () {
+              // Navigate to comments
+            },
+            onRetweakPressed: () {
+              // Retweak action
+            },
+            onSharePressed: () {
+              // Share action
+            },
+          ),
+          TweakWidget(
+            userName: "John Doe",
+            handle: "johndoe",
+            timeAgo: "2h",
+            userProfileUrl:
+                "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0",
+            tweakContent: "For Musk and Mark Fuck You!!...",
+            tweakImageUrl:
+                "https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+            isLiked: false,
+            likeCount: 123,
+            commentCount: 45,
+            retweakCount: 20,
+            onLikeToggle: () {
+              // Toggle like action
+            },
+            onCommentPressed: () {
+              // Navigate to comments
+            },
+            onRetweakPressed: () {
+              // Retweak action
+            },
+            onSharePressed: () {
+              // Share action
+            },
           ),
         ],
       ),
@@ -163,3 +237,5 @@ class _HomeWidgetState extends State<HomeWidget> {
  
   }
 }
+
+
