@@ -157,7 +157,7 @@ class _ReelPlayerWidgetState extends State<ReelPlayerWidget> {
 
     // This widget is always visible and static at the top of the screen
     return Positioned(
-      top: screenHeight * 0.065,
+      top: screenHeight * 0.005,
       left: 0,
       right: 0,
       child: Row(

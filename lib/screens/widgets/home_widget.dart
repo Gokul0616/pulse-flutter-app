@@ -185,7 +185,8 @@ class _HomeWidgetState extends State<HomeWidget> {
             timeAgo: "2h",
             userProfileUrl:
                 "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0",
-            tweakContent: "First tweaks by Gokul",
+            tweakContent:
+                "Your new home for real-time updates, quick thoughts, and engaging conversations. Share your thoughts, connect with others, and tweak the world around you.",
             tweakImageUrl:
                 "https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
             isLiked: false,
@@ -211,7 +212,8 @@ class _HomeWidgetState extends State<HomeWidget> {
             timeAgo: "2h",
             userProfileUrl:
                 "https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0",
-            tweakContent: "For Musk and Mark Fuck You!!...",
+            tweakContent:
+                "You're part of something new and exciting!Since Tweaks is in its early stages, your feedback is crucial. Explore the features, test everything, and let us know what you think. Your tweaks are what will make this platform better!",
             tweakImageUrl:
                 "https://images.pexels.com/photos/417074/pexels-photo-417074.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
             isLiked: false,
