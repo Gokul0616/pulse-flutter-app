@@ -11,7 +11,6 @@ class ExplorePage extends StatefulWidget {
 }
 
 class _ExplorePageState extends State<ExplorePage> {
-  final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
   // Your categories list

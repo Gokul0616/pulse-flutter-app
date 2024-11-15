@@ -14,19 +14,11 @@ class HomeWidget extends StatefulWidget {
 class _HomeWidgetState extends State<HomeWidget> {
   bool isLiked = false; // Track if the post is liked
   final ScrollController _scrollController = ScrollController();
-  Color _appBarBackgroundColor = Colors.white; // Initial background color
 
   @override
   void initState() {
     super.initState();
-    _scrollController.addListener(() {
-      // double scrollOffset = _scrollController.position.pixels;
-      setState(() {
-        // Update the color based on scroll position
-        _appBarBackgroundColor = const Color.fromARGB(255, 255, 255, 255);
-        // scrollOffset > 50 ? Colors.white : Colors.white;
-      });
-    });
+   
   }
 
   @override

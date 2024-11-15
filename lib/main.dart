@@ -1,3 +1,6 @@
+import 'package:Pulse/screens/auth_screens.dart';
+import 'package:Pulse/screens/signin_screen.dart';
+import 'package:Pulse/screens/signup_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'screens/home_screen.dart';
@@ -57,9 +60,9 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       ),
       initialRoute: '/Home',
       routes: {
-        // '/': (context) => const AuthScreen(),
-        // '/signup': (context) => const CreateAccountScreen(), 
-        // '/signin': (context) => const SignInScreen(), 
+        '/': (context) => const AuthScreen(),
+        '/signup': (context) => const CreateAccountScreen(),
+        '/signin': (context) => const SignInScreen(), 
         '/Home' : (context) =>const HomeScreen(),
         // Add other routes if necessary
       },

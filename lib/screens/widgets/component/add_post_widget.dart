@@ -28,7 +28,6 @@ class _AddPostWidgetState extends State<AddPostWidget>
   final ScrollController _scrollController = ScrollController();
   late Timer _videoTimer;
   int _videoDuration = 0; // Duration in seconds
-  String? _lastImagePath; // Variable to hold the last image path
 
   // Animation controller for the shutter button effect
   late AnimationController _shutterController;
@@ -67,11 +66,11 @@ class _AddPostWidgetState extends State<AddPostWidget>
       images.sort(
           (a, b) => b.statSync().modified.compareTo(a.statSync().modified));
       setState(() {
-        _lastImagePath = images.first.path; // Store the last image path
+// Store the last image path
       });
     } else {
       setState(() {
-        _lastImagePath = null; // No images available
+// No images available
       });
     }
   }
@@ -84,7 +83,7 @@ class _AddPostWidgetState extends State<AddPostWidget>
     if (pickedFile != null) {
       setState(() {
         _mediaFile = pickedFile; // Set the selected image
-        _lastImagePath = pickedFile.path; // Update last image path
+// Update last image path
       });
       _goToReviewScreen(_mediaFile, 'photo'); // Navigate to review screen
     }
@@ -270,6 +269,7 @@ Future<void> _startVideoRecording() async {
                     icon:
                         const Icon(Icons.close, color: Colors.white), // X icon
                     onPressed: () {
+                      // dispose();
                       Navigator.pop(context); // Go back to the previous screen
                     },
                   ),
