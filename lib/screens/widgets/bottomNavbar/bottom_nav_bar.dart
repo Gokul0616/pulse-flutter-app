@@ -24,44 +24,35 @@ class BottomNavBar extends StatelessWidget {
     
       child: BottomNavigationBar(
         
-        items: [
-          const BottomNavigationBarItem(
+        items: const [
+          BottomNavigationBarItem(
             icon: Icon(
               Icons.home,
               size: 20,
             ),
-            label: 'Home',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(
-              Icons.search,
-              size: 20,
-            ),
-            label: 'Search',
-          ),
-          const BottomNavigationBarItem(
-            icon: Icon(Icons.play_circle_filled, size: 20),
-            label: 'Reel',
+            label: '',
           ),
           BottomNavigationBarItem(
-            icon: SizedBox(
-              width: 15, // Set the desired width
-              height: 15, // Set the desired height
-              child: Image.asset(
-                'assets/appImages/icon/chat_icon.png', // Replace with your image path
-                color: currentIndex == 3
-                    ? Colors.black
-                    : Colors.grey, // Change color based on selection
-              ),
+            icon: Icon(
+              Icons.explore,
+              size: 20,
             ),
-            label: 'Chat',
+            label: '',
           ),
-          const BottomNavigationBarItem(
+          BottomNavigationBarItem(
+            icon: Icon(Icons.play_circle_filled, size: 20),
+            label: '',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.favorite_border_outlined, size: 20),
+            label: '',
+          ),
+          BottomNavigationBarItem(
             icon: Icon(
               Icons.person,
               size: 20,
             ),
-            label: 'Profile',
+            label: '',
           ),
         ],
         currentIndex: currentIndex,

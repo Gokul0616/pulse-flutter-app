@@ -45,6 +45,7 @@ class _ChatScreenState extends State<ChatScreen> {
           icon: const Icon(Icons.arrow_back, color: Colors.black),
           onPressed: () => Navigator.of(context).pop(),
         ),
+        
         title: Row(
           children: [
             CircleAvatar(

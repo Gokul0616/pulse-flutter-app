@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart'; // For path provider
 import "./PostReviewScreen.dart";
+import 'dart:async'; 
 
 class AddPostWidget extends StatefulWidget {
   const AddPostWidget({super.key});
@@ -13,7 +14,8 @@ class AddPostWidget extends StatefulWidget {
   _AddPostWidgetState createState() => _AddPostWidgetState();
 }
 
-class _AddPostWidgetState extends State<AddPostWidget> {
+class _AddPostWidgetState extends State<AddPostWidget>
+    with TickerProviderStateMixin {
   CameraController? _controller;
   List<CameraDescription>? _cameras;
   XFile? _mediaFile;
@@ -24,13 +26,28 @@ class _AddPostWidgetState extends State<AddPostWidget> {
   final List<String> modes = ['60s', '15s', 'Templates'];
   final ImagePicker _imagePicker = ImagePicker();
   final ScrollController _scrollController = ScrollController();
+  late Timer _videoTimer;
+  int _videoDuration = 0; // Duration in seconds
   String? _lastImagePath; // Variable to hold the last image path
+
+  // Animation controller for the shutter button effect
+  late AnimationController _shutterController;
+  late Animation<double> _shutterAnimation;
 
   @override
   void initState() {
     super.initState();
     _initializeCamera();
     _getLastImage(); // Fetch the last image on initialization
+
+    // Initialize the shutter effect animation
+    _shutterController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 200),
+    );
+    _shutterAnimation = Tween<double>(begin: 1.0, end: 0.7).animate(
+      CurvedAnimation(parent: _shutterController, curve: Curves.easeInOut),
+    );
   }
 
   Future<void> _getLastImage() async {
@@ -73,16 +90,19 @@ class _AddPostWidgetState extends State<AddPostWidget> {
     }
   }
 
-  Future<void> _initializeCamera() async {
-    await _requestPermissions();
-    _cameras = await availableCameras();
+Future<void> _initializeCamera() async {
+    // Avoid reinitializing if already initialized
+    if (_controller == null || !_controller!.value.isInitialized) {
+      await _requestPermissions();
+      _cameras = await availableCameras();
 
-    _controller = CameraController(
-      _cameras!.first,
-      _currentResolution,
-    );
-    await _controller!.initialize();
-    setState(() {});
+      _controller = CameraController(
+        _cameras!.first,
+        _currentResolution,
+      );
+      await _controller!.initialize();
+      setState(() {});
+    }
   }
 
   Future<void> _requestPermissions() async {
@@ -106,6 +126,11 @@ class _AddPostWidgetState extends State<AddPostWidget> {
 
   Future<void> _takePicture() async {
     if (_controller != null && _controller!.value.isInitialized) {
+      // Trigger the shutter animation when the picture is taken
+      _shutterController.forward().then((_) {
+        _shutterController.reverse();
+      });
+
       final image = await _controller!.takePicture();
       setState(() {
         _mediaFile = image;
@@ -113,18 +138,35 @@ class _AddPostWidgetState extends State<AddPostWidget> {
       _goToReviewScreen(_mediaFile, 'photo');
     }
   }
-
-  Future<void> _startVideoRecording() async {
+Future<void> _startVideoRecording() async {
     if (_controller != null &&
         _controller!.value.isInitialized &&
         !_isRecording) {
+      // Trigger the shutter animation when recording starts
+      _shutterController.forward().then((_) {
+        _shutterController.reverse();
+      });
+
       await _controller!.startVideoRecording();
       setState(() {
         _isRecording = true;
+        _videoDuration = 0; // Reset the timer
+      });
+
+      // Start a timer that updates every second
+      _videoTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        setState(() {
+          if (_videoDuration < 30) {
+            _videoDuration++;
+          } else {
+            // Stop recording after 30 seconds
+            _stopVideoRecording();
+          }
+        });
       });
     }
   }
-
+// Stop video recording and cancel the timer
   Future<void> _stopVideoRecording() async {
     if (_controller != null &&
         _controller!.value.isInitialized &&
@@ -133,7 +175,9 @@ class _AddPostWidgetState extends State<AddPostWidget> {
       setState(() {
         _mediaFile = video;
         _isRecording = false;
+        _videoDuration = 0; // Reset the timer when done
       });
+      _videoTimer.cancel(); // Stop the timer
       _goToReviewScreen(_mediaFile, 'video');
     }
   }
@@ -192,190 +236,137 @@ class _AddPostWidgetState extends State<AddPostWidget> {
       curve: Curves.easeInOut,
     );
   }
+@override
+  void dispose() {
+    // Properly dispose the camera when the widget is disposed
+    _controller!.dispose();
+    _shutterController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
     final screenWidth = MediaQuery.of(context).size.width;
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          _controller == null || !_controller!.value.isInitialized
-              ? const Center(child: CircularProgressIndicator())
-              : SizedBox(
-                  height: screenHeight,
-                  width: screenWidth,
-                  child: CameraPreview(_controller!),
-                ),
-          Positioned(
-            top: 40,
-            right: 20,
-            child: Column(
-              children: [
-                IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white), // X icon
-                  onPressed: () {
-                    Navigator.pop(context); // Go back to the previous screen
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.flip_camera_ios, color: Colors.white),
-                  onPressed: _switchCamera,
-                ),
-                IconButton(
-                  icon: const Icon(Icons.speed, color: Colors.white),
-                  onPressed: () {
-                    // Add speed functionality here
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.face_retouching_natural,
-                      color: Colors.white),
-                  onPressed: () {
-                    // Add beauty filter functionality here
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.filter, color: Colors.white),
-                  onPressed: () {
-                    // Add filter functionality here
-                  },
-                ),
-                IconButton(
-                  icon: const Icon(Icons.timer, color: Colors.white),
-                  onPressed: () {
-                    // Add timer functionality here
-                  },
-                ),
-                IconButton(
-                  icon: Icon(
-                    _isFlashOn ? Icons.flash_on : Icons.flash_off,
-                    color: Colors.white,
+    return SafeArea(
+      // Wrap your Scaffold in SafeArea to avoid UI overlaps
+      child: Scaffold(
+        body: Stack(
+          children: [
+            _controller == null || !_controller!.value.isInitialized
+                ? const Center(child: CircularProgressIndicator())
+                : SizedBox(
+                    height: screenHeight,
+                    width: screenWidth,
+                    child: CameraPreview(_controller!),
                   ),
-                  onPressed: _toggleFlash,
-                ),
-              ],
-            ),
-          ),
-          Positioned(
-            bottom: 40,
-            left: 0,
-            right: 0,
-            child: Column(
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    IconButton(
-                      icon: const Icon(Icons.face, color: Colors.white),
-                      onPressed: () {
-                        // Add effects functionality
-                      },
+            Positioned(
+              top: 40,
+              right: 20,
+              child: Column(
+                children: [
+                  IconButton(
+                    icon:
+                        const Icon(Icons.close, color: Colors.white), // X icon
+                    onPressed: () {
+                      Navigator.pop(context); // Go back to the previous screen
+                    },
+                  ),
+                  IconButton(
+                    icon:
+                        const Icon(Icons.flip_camera_ios, color: Colors.white),
+                    onPressed: _switchCamera,
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.speed, color: Colors.white),
+                    onPressed: () {
+                      // Add speed functionality here
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.face_retouching_natural,
+                        color: Colors.white),
+                    onPressed: () {
+                      // Add beauty filter functionality here
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.filter, color: Colors.white),
+                    onPressed: () {
+                      // Add filter functionality here
+                    },
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.timer, color: Colors.white),
+                    onPressed: () {
+                      // Add timer functionality here
+                    },
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      _isFlashOn ? Icons.flash_on : Icons.flash_off,
+                      color: Colors.white,
                     ),
-                    GestureDetector(
-                      onLongPress: _startVideoRecording,
-                      onLongPressEnd: (details) => _stopVideoRecording(),
-                      onTap: _takePicture,
+                    onPressed: _toggleFlash,
+                  ),
+                ],
+              ),
+            ),
+            Positioned(
+              bottom: 30,
+              left: screenWidth / 2 - 40,
+              child: GestureDetector(
+                onLongPress:
+                    _startVideoRecording, // Start recording on long press
+                onLongPressEnd: (details) {
+                  _stopVideoRecording(); // Stop recording when long press ends
+                },
+                onTap: () {
+                  // On tap, take a picture
+                  _takePicture();
+                },
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Circular progress indicator
+                    if (_isRecording)
+                      CircularProgressIndicator(
+                        value: _videoDuration / 30, // Track progress (0-1)
+                        strokeWidth: 4,
+                        valueColor: const AlwaysStoppedAnimation<Color>(Colors.red),
+                        backgroundColor: Colors.transparent,
+                      ),
+                    // Shutter button
+                    ScaleTransition(
+                      scale: _shutterAnimation,
                       child: Container(
-                        height: 80,
-                        width: 80,
-                        decoration: BoxDecoration(
+                        decoration: const BoxDecoration(
                           shape: BoxShape.circle,
-                          color: Colors.red,
-                          border: Border.all(color: Colors.white, width: 4),
+                          color: Colors.white,
+                          // border: Border.all(color: Colors.black, width: 4),
+                        ),
+                        width: 80,
+                        height: 80,
+                        child: Icon(
+                          _isRecording
+                              ? Icons.stop
+                              : Icons.camera_alt, // Show stop or camera icon
+                          color: _isRecording
+                              ? Colors.red
+                              : Colors.black, // Change color for recording
+                          size: 50,
                         ),
                       ),
                     ),
-                    GestureDetector(
-                      onTap: _openGallery, // Open gallery functionality
-                      child: _lastImagePath != null
-                          ? ClipRRect(
-                              borderRadius: BorderRadius.circular(10),
-                              child: Image.file(
-                                File(_lastImagePath!),
-                                width: 50,
-                                height: 50,
-                                fit: BoxFit.cover,
-                              ),
-                            )
-                          : Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                color: Colors.black, // Black box if no image
-                                borderRadius: BorderRadius.circular(10),
-                                border:
-                                    Border.all(color: Colors.white, width: 2),
-                              ),
-                            ),
-                    ),
                   ],
                 ),
-                // Horizontal scrollable timer options (60s, 15s, Templates)
-        Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: SizedBox(
-                    height: 50,
-                    child: NotificationListener<ScrollEndNotification>(
-                      onNotification: (scrollEnd) {
-                        _centerSelectedItem();
-                        return true;
-                      },
-                      child: ListView.builder(
-                        controller: _scrollController,
-                        scrollDirection: Axis.horizontal,
-                        physics: const BouncingScrollPhysics(),
-                        itemCount:  modes.length,
-                        itemBuilder: (context, index) {
-                          return GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                selectedIndex = index;
-                              });
-                              _centerSelectedItem(); // Ensure selected item is centered
-                            },
-                            child: Padding(
-                              padding: EdgeInsets.symmetric(
-                                horizontal: (screenWidth / 2 - 40) / 5,
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    modes[index],
-                                    style: TextStyle(
-                                      color: selectedIndex == index
-                                          ? Colors.white
-                                          : Colors.white54,
-                                      fontWeight: selectedIndex == index
-                                          ? FontWeight.bold
-                                          : FontWeight.normal,
-                                    ),
-                                  ),
-                                  if (selectedIndex == index)
-                                    Container(
-                                      margin: const EdgeInsets.only(top: 4),
-                                      width: 6,
-                                      height: 6,
-                                      decoration: const BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
+              ),
+            )
+
+
+          ],
+        ),
       ),
     );
   }

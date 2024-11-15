@@ -1,3 +1,4 @@
+import 'package:Pulse/screens/widgets/chat_widget.dart';
 import 'package:Pulse/screens/widgets/component/tweaks_widget.dart';
 import 'package:flutter/material.dart';
 import 'component/post_widget.dart';
@@ -40,7 +41,7 @@ class _HomeWidgetState extends State<HomeWidget> {
       backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor:
-            _appBarBackgroundColor, // Dynamically change the background color
+              Colors.white, // Dynamically change the background color
         title: Row(
           children: [
             Image.asset(
@@ -49,6 +50,7 @@ class _HomeWidgetState extends State<HomeWidget> {
               height: 55, // Adjust the height as needed
               color: Colors.black, // Change icon color
             ),
+
             const Text(
               "Pulse",
               style: TextStyle(
@@ -59,18 +61,41 @@ class _HomeWidgetState extends State<HomeWidget> {
                   ),
             ),
           ],
-        ),
-        automaticallyImplyLeading: false,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.favorite_border_outlined),
-            color: Colors.black,
-            iconSize: 26,
-            onPressed: () {
-              // Navigate to direct messages (optional)
-            },
           ),
-        ],
+          automaticallyImplyLeading: false,
+
+          actions: [
+            IconButton(
+              icon: const ImageIcon(
+                AssetImage('assets/appImages/icon/chat_icon.png'),
+                size: 26,
+                color: Colors.black, // Set color if your image supports tinting
+              ),
+              onPressed: () {
+                // Navigate to ChatListScreen with a left-to-right swipe animation
+                Navigator.of(context).push(PageRouteBuilder(
+                  pageBuilder: (context, animation, secondaryAnimation) {
+                    return const ChatListScreen();
+                  },
+                  transitionsBuilder:
+                      (context, animation, secondaryAnimation, child) {
+                    // Define the left-to-right swipe animation
+                    const begin = Offset(1.0, 0.0); // Start from the right
+                    const end = Offset.zero; // End at the current position
+                    const curve = Curves.easeInOut; // Animation curve
+
+                    var tween = Tween(begin: begin, end: end)
+                        .chain(CurveTween(curve: curve));
+                    var offsetAnimation = animation.drive(tween);
+
+                    return SlideTransition(
+                        position: offsetAnimation, child: child);
+                  },
+                ));
+              },
+            ),
+          ]
+
       ),
       body: ListView(
         controller: _scrollController, // Attach scroll controller to ListView
@@ -236,8 +261,6 @@ class _HomeWidgetState extends State<HomeWidget> {
         ],
       ),
     );
- 
+
   }
 }
-
-

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
-import '../components/alert_message.dart';
+import 'widgets/component/alert_message.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 // import 'package:sign_in_with_apple/sign_in_with_apple.dart';

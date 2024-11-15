@@ -488,6 +488,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                                   const Center(
                                     child: CircularProgressIndicator(
                                         color: Colors.red),
+                                        
                                   )
                                 else if (_isError)
                                   Padding(
@@ -642,6 +643,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                         // Video List (Only visible in portrait mode)
                         if (orientation == Orientation.portrait)
                           Expanded(
+                              child: Container(
+                            color: Colors.white,
                             child: ListView(
                               children: [
                                 VideoListScreen(
@@ -708,7 +711,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                                 ),
                               ],
                             ),
-                          ),
+                          )),
                       ],
                     ),
                   );
