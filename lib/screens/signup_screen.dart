@@ -189,6 +189,7 @@ bool isValidDOB(String dob) {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: Text(
           step == "enterPhoneOrEmail"
               ? "Sign Up"
@@ -219,6 +220,7 @@ bool isValidDOB(String dob) {
           },
         ),
       ),
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
           SingleChildScrollView(
@@ -243,13 +245,13 @@ bool isValidDOB(String dob) {
                     image: 'assets/appImages/icon/facebook.png',
                     label: 'Sign in with Facebook',
                   ),
-                  const SizedBox(height: 10),
-                  buildSocialSignInButton(
-                    context: context,
-                    onPressed: signInWithApple,
-                    image: 'assets/appImages/icon/apple.png',
-                    label: 'Sign in with Apple',
-                  ),
+                  // const SizedBox(height: 10),
+                  // buildSocialSignInButton(
+                  //   context: context,
+                  //   onPressed: signInWithApple,
+                  //   image: 'assets/appImages/icon/apple.png',
+                  //   label: 'Sign in with Apple',
+                  // ),
                 ] else if (step == "enterOTP") ...[
                   buildTextInput(
                       controller: otpController, hintText: "Enter OTP"),

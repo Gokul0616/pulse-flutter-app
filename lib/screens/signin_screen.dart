@@ -1,3 +1,4 @@
+import 'package:Pulse/api/apiComponent.dart';
 import 'package:flutter/material.dart';
 import 'widgets/component/alert_message.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -121,7 +122,9 @@ class _SignInScreenState extends State<SignInScreen> {
                   borderRadius: BorderRadius.circular(8), // Match button shape
                   color: Colors.transparent, // Makes Material transparent
                   child: InkWell(
-                    onTap: handleSignIn,
+                    onTap: () {
+                      handleSignIn;
+                    },
                     borderRadius: BorderRadius.circular(8),
                     child: Container(
                       padding: const EdgeInsets.symmetric(

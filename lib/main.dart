@@ -1,9 +1,11 @@
+import 'package:Pulse/api/apiComponent.dart';
 import 'package:Pulse/screens/auth_screens.dart';
 import 'package:Pulse/screens/signin_screen.dart';
 import 'package:Pulse/screens/signup_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'screens/home_screen.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -50,7 +52,6 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     ));
   }
 
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -58,12 +59,13 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      initialRoute: '/Home',
+      initialRoute: '/apiComponent',
       routes: {
         '/': (context) => const AuthScreen(),
         '/signup': (context) => const CreateAccountScreen(),
-        '/signin': (context) => const SignInScreen(), 
+        '/signin': (context) => const SignInScreen(),
         '/Home' : (context) =>const HomeScreen(),
+
         // Add other routes if necessary
       },
     );

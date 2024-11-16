@@ -61,7 +61,7 @@ class _HomeScreenState extends State<HomeScreen> {
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           // Slide the widget in from left to right
           final offsetAnimation = Tween<Offset>(
-            begin: Offset(-1.0, 0.0),
+            begin: const Offset(-1.0, 0.0),
             end: Offset.zero,
           ).animate(animation);
 
