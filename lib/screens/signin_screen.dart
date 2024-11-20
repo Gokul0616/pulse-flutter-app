@@ -1,4 +1,3 @@
-import 'package:Pulse/api/apiComponent.dart';
 import 'package:flutter/material.dart';
 import 'widgets/component/alert_message.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -104,8 +103,10 @@ class _SignInScreenState extends State<SignInScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: Colors.white,
         title: const Text("Sign In"),
       ),
+      backgroundColor: Colors.white,
       body: Stack(
         children: [
           SingleChildScrollView(
@@ -114,7 +115,7 @@ class _SignInScreenState extends State<SignInScreen> {
               children: [
                 buildTextInput(
                     controller: emailOrPhoneController,
-                    hintText: "Phone or Email"),
+                    hintText: "Email"),
                 const SizedBox(height: 20),
                 buildPasswordInput(),
                 const SizedBox(height: 20),
@@ -168,12 +169,12 @@ class _SignInScreenState extends State<SignInScreen> {
                   label: 'Sign in with Facebook',
                 ),
                 const SizedBox(height: 10),
-                buildSocialSignInButton(
-                  context: context,
-                  onPressed: signInWithApple,
-                  image: 'assets/appImages/icon/apple.png',
-                  label: 'Sign in with Apple',
-                ),
+                // buildSocialSignInButton(
+                //   context: context,
+                //   onPressed: signInWithApple,
+                //   image: 'assets/appImages/icon/apple.png',
+                //   label: 'Sign in with Apple',
+                // ),
               ],
             ),
           ),

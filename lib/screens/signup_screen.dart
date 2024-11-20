@@ -1,12 +1,15 @@
+import 'package:Pulse/api/apiComponent.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'dart:io';
 import 'widgets/component/alert_message.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'dart:async'; // For debounce functionality
 import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 // import 'package:sign_in_with_apple/sign_in_with_apple.dart';
-import 'package:intl/intl.dart'; 
+import 'package:intl/intl.dart';
+
 class CreateAccountScreen extends StatefulWidget {
   const CreateAccountScreen({super.key});
 
@@ -18,8 +21,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   final TextEditingController emailOrPhoneController = TextEditingController();
   final TextEditingController otpController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
-  final TextEditingController firstNameController = TextEditingController();
-  final TextEditingController lastNameController = TextEditingController();
+  final TextEditingController fullNameController = TextEditingController();
+  final TextEditingController usernameController = TextEditingController();
   final TextEditingController dobController = TextEditingController();
   final TextEditingController genderController = TextEditingController();
 
@@ -28,15 +31,65 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   String? profileImagePath;
   bool showAlert = false;
   String alertHeading = "";
+  bool isLoading = false;
+  bool isUsernameAvailable = false;
+  bool isUsernameValidating = false;
   String alertMessage = "";
-
+  Timer? debounceTimer;
   final RegExp emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
-  final RegExp phoneRegex = RegExp(r'^\+?[1-9]\d{1,14}$');
+// final RegExp phoneRegex = RegExp(r'^\+?[1-9]\d{0,3}\d{10}$');
+  final RegExp phoneRegex = RegExp(r'^\+?[6-9]\d{9}$');
 
   void togglePasswordVisibility() {
     setState(() {
       showPassword = !showPassword;
     });
+  }
+
+  // Function to check username availability
+  Future<void> checkUsernameAvailability(String username) async {
+    if (username.isEmpty) {
+      setState(() {
+        isUsernameAvailable = false;
+        isUsernameValidating = false;
+      });
+      return;
+    }
+    if (username.length < 5) {
+      setState(() {
+        isUsernameAvailable = false;
+        isUsernameValidating = false;
+      });
+      return;
+    }
+
+    setState(() {
+      isUsernameValidating = true;
+    });
+
+    try {
+      // Simulate API call
+      final response = await checkUsername(username: username);
+
+      if (response["error"] != null) {
+        showAlertDialog("Error", "Some Unexpected Errors Occured.");
+      } else {
+        if (response["available"] == true) {
+          setState(() {
+            isUsernameAvailable = response['available'] ?? false;
+            isUsernameValidating = false;
+          });
+        } else {
+          isUsernameAvailable = false;
+          isUsernameValidating = false;
+        }
+      }
+    } catch (e) {
+      setState(() {
+        isUsernameAvailable = false;
+        isUsernameValidating = false;
+      });
+    }
   }
 
   Future<void> pickImage() async {
@@ -47,7 +100,13 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
           await ImagePicker().pickImage(source: ImageSource.gallery);
       if (pickedFile != null) {
         setState(() {
+          isLoading = true;
           profileImagePath = pickedFile.path;
+        });
+        await uploadProfileImage(
+            profileImagePath: profileImagePath, userId: "001");
+        setState(() {
+          isLoading = false;
         });
       } else {
         showAlertDialog("No Image Selected", "Please select an image.");
@@ -67,40 +126,43 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       showAlertDialog("Google Sign-In Failed", "Please try again.");
     }
   }
-bool isValidDOB(String dob) {
-  try {
-    // Parse the date using strict parsing to ensure format is correct
-    final parsedDate = DateFormat('yyyy-MM-dd').parseStrict(dob);
-    final currentDate = DateTime.now();
-    
-    // Check if the date is in the future
-    if (parsedDate.isAfter(currentDate)) {
-      showAlertDialog("Invalid DOB", "Date of birth cannot be in the future.");
+
+  bool isValidDOB(String dob) {
+    try {
+      // Parse the date using strict parsing to ensure format is correct
+      final parsedDate = DateFormat('yyyy-MM-dd').parseStrict(dob);
+      final currentDate = DateTime.now();
+
+      // Check if the date is in the future
+      if (parsedDate.isAfter(currentDate)) {
+        showAlertDialog(
+            "Invalid DOB", "Date of birth cannot be in the future.");
+        return false;
+      }
+
+      // Calculate the age
+      int age = currentDate.year - parsedDate.year;
+
+      // Adjust age if the birthday has not occurred this year yet
+      if (currentDate.month < parsedDate.month ||
+          (currentDate.month == parsedDate.month &&
+              currentDate.day < parsedDate.day)) {
+        age--;
+      }
+
+      // Check if the user is at least 13 years old
+      if (age < 13) {
+        showAlertDialog("Invalid DOB", "You must be at least 13 years old.");
+        return false;
+      }
+
+      return true; // Valid DOB
+    } catch (e) {
+      // Handle parsing error
+      showAlertDialog("Invalid DOB", "Please enter a valid date (YYYY-MM-DD).");
       return false;
     }
-    
-    // Calculate the age
-    int age = currentDate.year - parsedDate.year;
-    
-    // Adjust age if the birthday has not occurred this year yet
-    if (currentDate.month < parsedDate.month ||
-        (currentDate.month == parsedDate.month && currentDate.day < parsedDate.day)) {
-      age--;
-    }
-    
-    // Check if the user is at least 13 years old
-    if (age < 13) {
-      showAlertDialog("Invalid DOB", "You must be at least 13 years old.");
-      return false;
-    }
-    
-    return true; // Valid DOB
-  } catch (e) {
-    // Handle parsing error
-    showAlertDialog("Invalid DOB", "Please enter a valid date (YYYY-MM-DD).");
-    return false;
   }
-}
 
   Future<void> signInWithFacebook() async {
     try {
@@ -129,43 +191,108 @@ bool isValidDOB(String dob) {
     }
   }
 
-  void handleNextStep() {
+  String? otp; // Declare OTP as nullable
+  Future<void> handleNextStep() async {
     if (step == "enterPhoneOrEmail") {
-      if (emailRegex.hasMatch(emailOrPhoneController.text) ||
-          phoneRegex.hasMatch(emailOrPhoneController.text)) {
+      if (emailRegex.hasMatch(emailOrPhoneController.text)) {
+        FocusScope.of(context).unfocus(); // Close the keyboard
+
         setState(() {
-          step = "enterOTP";
+          isLoading = true; // Show loading indicator
         });
+
+        try {
+          final result =
+              await PhoneOrEmailValidateApi(email: emailOrPhoneController.text);
+
+          // Debugging: Log API response
+
+          if (result['otp'] != null) {
+            otp = result['otp'].toString(); // Convert OTP to string
+          } else {
+            throw Exception("OTP not found in API response.");
+          }
+
+          if (result['code'] == 201) {
+            setState(() {
+              step = "enterOTP";
+              showAlertDialog(
+                "OTP Sent",
+                result['message'] ?? "OTP sent successfully.",
+              );
+            });
+          } else {
+            showAlertDialog(
+              "Error",
+              result['message'] ?? "Failed to send OTP. Please try again.",
+            );
+          }
+        } catch (e) {
+          showAlertDialog(
+            "Error",
+            "An error occurred while sending OTP. Please try again.",
+          );
+          print("Error: $e");
+        } finally {
+          setState(() {
+            isLoading = false; // Hide loading indicator
+          });
+        }
       } else {
-        showAlertDialog(
-            "Invalid Input", "Please enter a valid email or phone number.");
+        showAlertDialog("Invalid Input", "Please enter a valid email.");
       }
     } else if (step == "enterOTP") {
       if (otpController.text.isNotEmpty) {
-        setState(() {
-          step = "enterPassword";
-        });
+        if (otp != null && otp == otpController.text) {
+          setState(() {
+            step = "enterPassword"; // Move to the next step
+          });
+        } else {
+          showAlertDialog(
+            "Invalid OTP",
+            "The OTP you entered is incorrect. Please try again.",
+          );
+        }
       } else {
         showAlertDialog(
-            "Missing OTP", "Please enter the OTP sent to your email or phone.");
+            "Missing OTP", "Please enter the OTP sent to your email.");
       }
     } else if (step == "enterPassword") {
       if (passwordController.text.isNotEmpty) {
         setState(() {
-          step = "enterPersonalDetails";
+          step = "enterPersonalDetails"; // Move to the next step
         });
       } else {
         showAlertDialog("Missing Password", "Please create a password.");
       }
     } else if (step == "enterPersonalDetails") {
-      if (firstNameController.text.isNotEmpty &&
-          lastNameController.text.isNotEmpty &&
+      if (fullNameController.text.isNotEmpty &&
+          usernameController.text.isNotEmpty &&
+          isUsernameAvailable &&
           isValidDOB(dobController.text)) {
-        // Proceed to home screen
-        Navigator.pushNamed(context, '/Home');
+        FocusScope.of(context).unfocus(); // Close the keyboard
+
+        setState(() {
+          isLoading = true; // Show loading indicator
+        });
+        final response = await SignupApi(
+          username: usernameController.text,
+          email: emailOrPhoneController.text,
+          // phone: emailOrPhoneController.text,
+          password: passwordController.text,
+          fullName: fullNameController.text,
+          dob: dobController.text,
+        );
+        await saveUserToken(response['user']['uuid']);
+        setState(() {
+          isLoading = false; // Show loading indicator
+        });
+        Navigator.pushNamed(context, '/Home'); // Navigate to home screen
       } else {
-        showAlertDialog("Incomplete Details",
-            "Please fill in your first and last name and enter a valid date of birth.");
+        showAlertDialog(
+          "Incomplete Details",
+          "Please fill in your Fullname, username, and enter a valid date of birth.",
+        );
       }
     }
   }
@@ -229,8 +356,7 @@ bool isValidDOB(String dob) {
               children: [
                 if (step == "enterPhoneOrEmail") ...[
                   buildTextInput(
-                      controller: emailOrPhoneController,
-                      hintText: "Phone or Email"),
+                      controller: emailOrPhoneController, hintText: "Email"),
                   const SizedBox(height: 20),
                   buildSocialSignInButton(
                     context: context,
@@ -272,15 +398,14 @@ bool isValidDOB(String dob) {
                   ),
                   const SizedBox(height: 20),
                   buildTextInput(
-                      controller: firstNameController, hintText: "First Name"),
-                  buildTextInput(
-                      controller: lastNameController, hintText: "Last Name"),
+                      controller: fullNameController, hintText: "Full Name"),
+                  buildUsernameInput(),
                   buildTextInput(
                       controller: dobController,
                       hintText: "Date of Birth (YYYY-MM-DD)"),
-                  buildTextInput(
-                      controller: genderController,
-                      hintText: "Gender (Optional)"),
+                  // buildTextInput(
+                  //     controller: genderController,
+                  //     hintText: "Gender (Optional)"),
                 ],
                 const SizedBox(height: 20),
                 Material(
@@ -324,6 +449,15 @@ bool isValidDOB(String dob) {
               ],
             ),
           ),
+          if (isLoading)
+            Container(
+              color: Colors.black.withOpacity(0.5), // Dim background
+              child: const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+            ),
           if (showAlert)
             AlertMessage(
               heading: alertHeading,
@@ -385,6 +519,43 @@ bool isValidDOB(String dob) {
             ),
             onPressed: togglePasswordVisibility,
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget buildUsernameInput() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: TextField(
+        controller: usernameController,
+        onChanged: (value) {
+          if (debounceTimer?.isActive ?? false) debounceTimer!.cancel();
+
+          debounceTimer = Timer(const Duration(milliseconds: 500), () {
+            checkUsernameAvailability(value);
+          });
+        },
+        decoration: InputDecoration(
+          hintText: "Username",
+          border: OutlineInputBorder(
+            borderSide: const BorderSide(color: Color(0xFFCECECE)),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          filled: true,
+          fillColor: const Color(0xFFE8E8E8),
+          suffixIcon: isUsernameValidating
+              ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                  ),
+                )
+              : Icon(
+                  isUsernameAvailable ? Icons.check_circle : Icons.cancel,
+                  color: isUsernameAvailable ? Colors.green : Colors.red,
+                ),
         ),
       ),
     );

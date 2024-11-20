@@ -1,5 +1,7 @@
-import 'package:Pulse/screens/widgets/component/edit_profile_screen.dart';
+import 'package:Pulse/api/apiComponent.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:Pulse/screens/widgets/component/edit_profile_screen.dart';
 
 class ProfileWidget extends StatelessWidget {
   const ProfileWidget({super.key});
@@ -7,11 +9,13 @@ class ProfileWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
+    final storage = const FlutterSecureStorage();
+
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
-        elevation: 0, // No shadow for a clean look
+        elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.person_add_alt, color: Colors.black),
           onPressed: () {
@@ -19,16 +23,22 @@ class ProfileWidget extends StatelessWidget {
           },
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.more_vert, color: Colors.black),
-            onPressed: () {
-              // Add functionality for more options icon
+          // Use Builder widget to get the correct context for the Scaffold
+          Builder(
+            builder: (BuildContext context) {
+              return IconButton(
+                icon: const Icon(Icons.menu_rounded, color: Colors.black),
+                onPressed: () {
+                  // Open the right-side drawer when pressed
+                  Scaffold.of(context).openEndDrawer();
+                },
+              );
             },
           ),
         ],
         centerTitle: true,
         title: const Text(
-          'Jacob West', // Static username, could be dynamic
+          'Jacob West',
           style: TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.bold,
@@ -37,48 +47,39 @@ class ProfileWidget extends StatelessWidget {
       ),
       backgroundColor: Colors.white,
       body: DefaultTabController(
-        
-        length: 3, // Number of tabs
-        
+        length: 3,
         child: Column(
           children: [
-            // const SizedBox(height: 4),
             CircleAvatar(
               backgroundImage: const NetworkImage(
                   'https://th.bing.com/th/id/OIP.MtGd0GcHiXFMqidnBh8UngHaE8?rs=1&pid=ImgDetMain'),
-              radius: screenSize.width * 0.1, // Adjusted size of avatar
+              radius: screenSize.width * 0.1,
             ),
-            // const SizedBox(height: 8),
             const Text(
               'jacob_w',
               style: TextStyle(
-                fontSize: 16, // Slightly larger for username
+                fontSize: 16,
                 fontWeight: FontWeight.bold,
                 color: Colors.black,
               ),
             ),
-            // const SizedBox(height: 3),
             const Text(
-              '@jacob_w', // Handle with a lighter style
+              '@jacob_w',
               style: TextStyle(
                 fontSize: 12,
                 color: Colors.grey,
               ),
             ),
-            // const SizedBox(height: 12),
-            // Following, Followers, Likes section
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 _buildCountColumn('14', 'Following'),
-                _buildDivider(), // Divider between each stat
+                _buildDivider(),
                 _buildCountColumn('38', 'Followers'),
                 _buildDivider(),
                 _buildCountColumn('91', 'Likes'),
               ],
             ),
-            const SizedBox(height: 4),
-            // Edit profile button, styled to match the image
             SizedBox(
               width: screenSize.width * 0.35,
               child: OutlinedButton(
@@ -89,8 +90,8 @@ class ProfileWidget extends StatelessWidget {
                           const EditProfileScreen(),
                       transitionsBuilder:
                           (context, animation, secondaryAnimation, child) {
-                        const begin = Offset(1.0, 0.0); // Start from the right
-                        const end = Offset.zero; // End at the original position
+                        const begin = Offset(1.0, 0.0);
+                        const end = Offset.zero;
                         const curve = Curves.easeInOut;
 
                         final tween = Tween(begin: begin, end: end)
@@ -106,51 +107,95 @@ class ProfileWidget extends StatelessWidget {
                   );
                 },
                 style: OutlinedButton.styleFrom(
-                  side: const BorderSide(
-                      color: Color.fromARGB(255, 100, 99, 99)), // Border color
+                  side:
+                      const BorderSide(color: Color.fromARGB(255, 100, 99, 99)),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10), // Rounded corners
+                    borderRadius: BorderRadius.circular(10),
                   ),
-                  padding: const EdgeInsets.symmetric(
-                      vertical: 8,horizontal: 8), // Vertical padding
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
                 ),
                 child: const Text(
                   'Edit profile',
                   style: TextStyle(
-                    color:
-                        Colors.black, // Change text color to black for contrast
-                    fontSize: 16, // Adjust font size if necessary
+                    color: Colors.black,
+                    fontSize: 16,
                   ),
                 ),
               ),
             ),
-
             const SizedBox(height: 6),
-            // Placeholder for bio
             const Text(
               'Tap to add bio',
               style: TextStyle(color: Colors.grey),
             ),
             const SizedBox(height: 8),
-            // Tab Bar for navigating between sections
             const TabBar(
               tabs: [
-                Tab(icon: Icon(Icons.grid_on, size: 20)), // Posts Tab
-                Tab(icon: Icon(Icons.notes, size: 20)), // Likes Tab
-                Tab(icon: Icon(Icons.video_library, size: 20)), // Videos Tab
+                Tab(icon: Icon(Icons.grid_on, size: 20)),
+                Tab(icon: Icon(Icons.notes, size: 20)),
+                Tab(icon: Icon(Icons.video_library, size: 20)),
               ],
-              labelColor: Colors.black, // Color of selected tab
-              unselectedLabelColor: Colors.grey, // Color of unselected tabs
-              indicatorColor: Colors.blue, // Color of the tab indicator
+              labelColor: Colors.black,
+              unselectedLabelColor: Colors.grey,
+              indicatorColor: Colors.blue,
             ),
             const Expanded(
               child: TabBarView(
                 children: [
-                  _PostTab(), // Content for Posts
-                  _Tweakstab(), // Content for Likes
-                  _VideosTab(), // Content for Videos
+                  _PostTab(),
+                  _Tweakstab(),
+                  _VideosTab(),
                 ],
               ),
+            ),
+          ],
+        ),
+      ),
+      // Change 'drawer' to 'endDrawer' here to open the drawer from the right
+      endDrawer: Drawer(
+        shape: const RoundedRectangleBorder(
+          // This removes the curved borders
+          borderRadius:
+              BorderRadius.zero, // Ensure the corners are square (no rounding)
+        ),
+        backgroundColor: Colors.white,
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: <Widget>[
+            // const DrawerHeader(
+            //   decoration: BoxDecoration(),
+            //   child: Text(
+            //     'Social Media App',
+            //     style: TextStyle(
+            //       color: Colors.black,
+            //       fontSize: 24,
+            //     ),
+            //   ),
+            // ),
+            ListTile(
+              leading: const Icon(Icons.account_circle),
+              title: const Text('Profile'),
+              onTap: () {
+                // Navigate to Profile screen
+                Navigator.pushNamed(context, '/profile');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.settings),
+              title: const Text('Settings'),
+              onTap: () {
+                // Navigate to Settings screen
+                Navigator.pushNamed(context, '/settings');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text('Log Out'),
+              onTap: () async {
+                await logout();
+                Navigator.pushReplacementNamed(context, '/auth');
+              },
             ),
           ],
         ),
@@ -165,7 +210,7 @@ class ProfileWidget extends StatelessWidget {
         Text(
           count,
           style: const TextStyle(
-            fontSize: 16, // Adjusted for a cleaner look
+            fontSize: 16,
             fontWeight: FontWeight.bold,
             color: Colors.black,
           ),
@@ -174,7 +219,7 @@ class ProfileWidget extends StatelessWidget {
         Text(
           label,
           style: const TextStyle(
-            fontSize: 14, // Reduced size of the label
+            fontSize: 14,
             color: Colors.grey,
           ),
         ),
@@ -185,12 +230,10 @@ class ProfileWidget extends StatelessWidget {
   // Divider widget between each stat (Following, Followers, Likes)
   Widget _buildDivider() {
     return const SizedBox(
-      width: 24, // Adjust space between each count
+      width: 24,
     );
   }
 }
-
-// Remaining classes (_PostTab, _Tweakstab, _VideosTab) unchanged
 
 class _PostTab extends StatelessWidget {
   const _PostTab();
@@ -200,20 +243,19 @@ class _PostTab extends StatelessWidget {
     return GridView.builder(
       padding: const EdgeInsets.all(4.0),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 3, // 3 columns like TikTok
-        crossAxisSpacing: 4.0, // Spacing between grid items
+        crossAxisCount: 3,
+        crossAxisSpacing: 4.0,
         mainAxisSpacing: 4.0,
-        childAspectRatio: 1, // Ensures square aspect ratio
+        childAspectRatio: 1,
       ),
-      itemCount: 12, // Number of posts (replace with dynamic data later)
+      itemCount: 12,
       itemBuilder: (context, index) {
         return Container(
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(8),
-            color: Colors.grey[300], // Placeholder for post thumbnail
+            color: Colors.grey[300],
             image: const DecorationImage(
-              image: NetworkImage(
-                  'https://via.placeholder.com/300'), // Placeholder image
+              image: NetworkImage('https://via.placeholder.com/300'),
               fit: BoxFit.cover,
             ),
           ),
@@ -230,13 +272,13 @@ class _Tweakstab extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.builder(
       padding: const EdgeInsets.all(10.0),
-      itemCount: 10, // Number of liked items (replace with dynamic data later)
+      itemCount: 10,
       itemBuilder: (context, index) {
         return Card(
           margin: const EdgeInsets.symmetric(vertical: 8.0),
-          elevation: 4, // Added elevation for shadow effect
+          elevation: 4,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12), // Rounded corners
+            borderRadius: BorderRadius.circular(12),
           ),
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -258,13 +300,13 @@ class _VideosTab extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.builder(
       padding: const EdgeInsets.all(10.0),
-      itemCount: 5, // Number of videos (replace with dynamic data later)
+      itemCount: 5,
       itemBuilder: (context, index) {
         return Container(
           height: 200,
           decoration: BoxDecoration(
-            color: Colors.black, // Placeholder for video
-            borderRadius: BorderRadius.circular(12), // Rounded corners
+            color: Colors.black,
+            borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.2),
@@ -278,7 +320,7 @@ class _VideosTab extends StatelessWidget {
             child: Icon(
               Icons.play_circle_outline,
               color: Colors.white,
-              size: 40, // Smaller icon size
+              size: 40,
             ),
           ),
         );

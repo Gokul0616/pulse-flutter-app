@@ -17,7 +17,7 @@ class BottomNavBar extends StatelessWidget {
 
     // Adjust the height of the BottomNavigationBar based on screen size
     double navBarHeight =
-        screenHeight * 0.065; // 8% of screen height as an example
+        screenHeight * 0.055; // 8% of screen height as an example
 
     return SizedBox(
       height: navBarHeight, // Adjust the height of the nav bar dynamically
@@ -28,29 +28,37 @@ class BottomNavBar extends StatelessWidget {
           BottomNavigationBarItem(
             icon: Icon(
               Icons.home,
-              size: 20,
+              size: 25,
             ),
             label: '',
           ),
           BottomNavigationBarItem(
             icon: Icon(
               Icons.explore,
-              size: 20,
+              size: 25,
+
             ),
             label: '',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.play_circle_filled, size: 20),
+            icon: Icon(
+              Icons.play_circle_filled,
+              size: 25,
+            ),
             label: '',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.favorite_border_outlined, size: 20),
+            icon: Icon(
+              Icons.favorite_border_outlined,
+              size: 25,
+            ),
             label: '',
           ),
           BottomNavigationBarItem(
             icon: Icon(
               Icons.person,
-              size: 20,
+              size: 25,
+
             ),
             label: '',
           ),
