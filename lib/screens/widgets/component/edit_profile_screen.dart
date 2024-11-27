@@ -2,8 +2,6 @@ import 'package:Pulse/api/apiComponent.dart';
 import 'package:Pulse/screens/widgets/component/alert_message.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:http/http.dart' as http;
-import 'dart:convert';
 
 class EditProfileScreen extends StatefulWidget {
   final dynamic globalUser;

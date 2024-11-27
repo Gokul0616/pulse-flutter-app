@@ -7,7 +7,9 @@ import 'package:geocoding/geocoding.dart';
 import 'package:mime/mime.dart';
 
 const commonUrl = 'http://10.0.2.2:5000/api';
+const commonUrl2 = 'http://10.0.2.2:5000';
 // const commonUrl = 'https://pulse-flutter-app-server.onrender.com/api';
+// const commonUrl2 = 'https://pulse-flutter-app-server.onrender.com';
 const storage = FlutterSecureStorage();
 
 // Function to save the token after login/signup
@@ -50,6 +52,9 @@ Future<dynamic> PhoneOrEmailValidateApi({String? email, String? phone}) async {
     if (response.statusCode == 200 || response.statusCode == 201) {
       final jsonResponse = jsonDecode(response.body);
       return jsonResponse; // Return decoded JSON response
+    } else if (response.statusCode == 422) {
+      final jsonResponse = jsonDecode(response.body);
+      return jsonResponse;
     } else {
       return {
         "error": "Failed to sign up",
@@ -63,7 +68,7 @@ Future<dynamic> PhoneOrEmailValidateApi({String? email, String? phone}) async {
 }
 
 // Function to upload profile image with dynamic content type based on file extension
-Future<void> uploadProfileImage(
+Future<dynamic> uploadProfileImage(
     {String? profileImagePath, String? userId}) async {
   if (profileImagePath == null || profileImagePath.isEmpty) {
     print("No image selected. Please select an image first.");
@@ -79,7 +84,7 @@ Future<void> uploadProfileImage(
     }
 
     // Create a Multipart Request
-    final url = Uri.parse('$commonUrl/upload');
+    final url = Uri.parse('$commonUrl/upload/userprofile');
     var request = http.MultipartRequest('POST', url);
 
     // Add image to the request with dynamic content type
@@ -101,11 +106,9 @@ Future<void> uploadProfileImage(
     var response = await request.send();
 
     if (response.statusCode == 200) {
-      print("Profile image uploaded successfully");
-
       // Optionally: Parse the response to get the uploaded file details if needed
       var responseData = await http.Response.fromStream(response);
-      print('Response: ${responseData.body}');
+      return jsonDecode(responseData.body);
     } else {
       // Log the response status code and body for further investigation
       print("Upload Failed: ${response.statusCode}");
@@ -159,10 +162,17 @@ Future<dynamic> SignupApi({
   required String password,
   required String fullName, // Optional field
   required String dob,
-  String? profileImagePath, // Optional field for profile image
+  String? profilepath, // Optional field for profile image
   String? gender, // Optional field for gender
 }) async {
   final url = Uri.parse('$commonUrl/signup');
+  String? finalProfilePath;
+  if (profilepath != null && profilepath.isNotEmpty) {
+    finalProfilePath =
+        '$commonUrl2/$profilepath'; // Assuming profilepath is the relative path
+  } else {
+    finalProfilePath = null; // Or set a default path if needed
+  }
 
   try {
     // Request location permission before fetching location
@@ -213,6 +223,7 @@ Future<dynamic> SignupApi({
       "dob": dob,
       "full_name": fullName,
       "timezone": timezone,
+      "profilepath": finalProfilePath,
       "country":
           country ?? "Unknown", // Fallback to 'Unknown' if no country found
     };

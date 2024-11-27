@@ -25,7 +25,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController dobController = TextEditingController();
   final TextEditingController genderController = TextEditingController();
-
+  String profileimagepath = "";
   String step = "enterPhoneOrEmail";
   bool showPassword = false;
   String? profileImagePath;
@@ -110,9 +110,10 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
           isLoading = true;
           profileImagePath = pickedFile.path;
         });
-        await uploadProfileImage(
+        final result = await uploadProfileImage(
             profileImagePath: profileImagePath, userId: "001");
         setState(() {
+          profileimagepath = result['imagePath'];
           isLoading = false;
         });
       } else {
@@ -211,16 +212,25 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
         try {
           final result =
               await PhoneOrEmailValidateApi(email: emailOrPhoneController.text);
-
           // Debugging: Log API response
 
-          if (result['otp'] != null) {
-            otp = result['otp'].toString(); // Convert OTP to string
-          } else {
-            throw Exception("OTP not found in API response.");
+          if (result['code'] == 422) {
+            setState(() {
+              showAlertDialog(
+                "Sign-Up Failed",
+                result['message'] ?? "User already exists.",
+              );
+            });
+            return;
           }
 
+          // Check for OTP only if the code is 201 (new user)
           if (result['code'] == 201) {
+            if (result['otp'] != null) {
+              otp = result['otp'].toString(); // Convert OTP to string
+            } else {
+              throw Exception("OTP not found in API response.");
+            }
             setState(() {
               step = "enterOTP";
               showAlertDialog(
@@ -288,6 +298,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
           // phone: emailOrPhoneController.text,
           password: passwordController.text,
           fullName: fullNameController.text,
+          profilepath: profileimagepath,
           dob: dobController.text,
         );
         await saveUserToken(response['user']['uuid']);
