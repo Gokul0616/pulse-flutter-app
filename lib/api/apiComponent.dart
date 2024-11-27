@@ -1,4 +1,3 @@
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:http_parser/http_parser.dart';
@@ -8,7 +7,8 @@ import 'package:geocoding/geocoding.dart';
 import 'package:mime/mime.dart';
 
 const commonUrl = 'http://10.0.2.2:5000/api';
-final storage = const FlutterSecureStorage();
+// const commonUrl = 'https://pulse-flutter-app-server.onrender.com/api';
+const storage = FlutterSecureStorage();
 
 // Function to save the token after login/signup
 Future<void> saveUserToken(String token) async {
@@ -269,11 +269,10 @@ Future<dynamic> SignupApi({
 }
 
 Future<bool> autoLogin() async {
-  final storage = const FlutterSecureStorage();
+  const storage = FlutterSecureStorage();
   final uniqueUserKey = await storage.read(key: 'user_token_pulseApp');
 
   if (uniqueUserKey != null) {
-    print(uniqueUserKey);
     return true; // No user key stored
   } else {
     return false;
@@ -298,4 +297,113 @@ Future<bool> autoLogin() async {
   //   await storage.delete(key: 'unique_user_key'); // Clear stored key
   //   return false;
   // }
+}
+
+Future<dynamic> fetchUserDetails() async {
+  const storage = FlutterSecureStorage();
+  final token = await storage.read(key: 'user_token_pulseApp');
+  if (token == null) {
+    return {"error": "User token not found. Please log in again."};
+  }
+
+  final url = Uri.parse('$commonUrl/user-details');
+
+  try {
+    // Make a GET request with the token for authorization
+    final response = await http.get(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': token, // Send token as Bearer token
+      },
+    );
+
+    if (response.statusCode == 200) {
+      // Parse and return the response body
+      final jsonResponse = jsonDecode(response.body);
+      return jsonResponse;
+    } else {
+      // Return error response
+      return {
+        "error": "Failed to fetch user details",
+        "statusCode": response.statusCode,
+        "body": response.body,
+      };
+    }
+  } catch (e) {
+    return {"error": "Exception occurred", "details": e.toString()};
+  }
+}
+
+// Function to send updated data to the backend API
+
+Future<void> updateUserProfile(
+    String userId, String fullName, String username, String bio) async {
+  final url = Uri.parse('$commonUrl/user-updateprofile');
+
+  // Create the request body
+  final Map<String, String> updatedData = {
+    'full_name': fullName,
+    'username': username,
+    'bio': bio,
+  };
+
+  // Send the PUT request to update the user profile
+  try {
+    final response = await http.put(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': userId, // Send token as Bearer token
+      },
+      body: json.encode(updatedData),
+    );
+
+    if (response.statusCode == 200) {
+      print('Profile updated successfully');
+    } else {
+      print('Failed to update profile: ${response.statusCode}');
+    }
+  } catch (e) {
+    print('Error updating profile: $e');
+  }
+}
+
+class AuthResult {
+  final bool isSuccess;
+  final String? message;
+  final Map<String, dynamic>? data;
+
+  AuthResult({required this.isSuccess, this.message, this.data});
+}
+
+Future<AuthResult> SigninApi(String emailOrPhone, String password) async {
+  try {
+    // Define the URL inside the static method
+    final url = Uri.parse('$commonUrl/auth/signin');
+
+    final response = await http.post(
+      url,
+      headers: {"Content-Type": "application/json"},
+      body: jsonEncode({
+        "emailOrPhone": emailOrPhone,
+        "password": password,
+      }),
+    );
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      final token = data['user']['id'];
+      await logout();
+      await saveUserToken(token);
+      return AuthResult(isSuccess: true, data: data);
+    } else {
+      final error = jsonDecode(response.body);
+      return AuthResult(
+        isSuccess: false,
+        message: error['message'] ?? 'Unknown error',
+      );
+    }
+  } catch (e) {
+    return AuthResult(isSuccess: false, message: "Error: $e");
+  }
 }

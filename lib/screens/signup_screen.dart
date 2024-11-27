@@ -62,6 +62,13 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       });
       return;
     }
+    if (username.contains(' ')) {
+      setState(() {
+        isUsernameAvailable = false;
+        isUsernameValidating = false;
+      });
+      return;
+    }
 
     setState(() {
       isUsernameValidating = true;
@@ -549,7 +556,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                   width: 24,
                   height: 24,
                   child: CircularProgressIndicator(
-                    strokeWidth: 2,
+                    strokeWidth: 1.5,
                   ),
                 )
               : Icon(

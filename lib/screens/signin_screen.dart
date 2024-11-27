@@ -1,3 +1,4 @@
+import 'package:Pulse/api/apiComponent.dart';
 import 'package:flutter/material.dart';
 import 'widgets/component/alert_message.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -18,6 +19,7 @@ class _SignInScreenState extends State<SignInScreen> {
   bool showPassword = false; // State to control password visibility
   bool showAlert = false;
   String alertHeading = "";
+  bool _isLoading = false;
   String alertMessage = "";
 
   final RegExp emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
@@ -69,20 +71,59 @@ class _SignInScreenState extends State<SignInScreen> {
     }
   }
 
-  void handleSignIn() {
-    if (emailRegex.hasMatch(emailOrPhoneController.text) ||
-        phoneRegex.hasMatch(emailOrPhoneController.text)) {
-      if (passwordController.text.isNotEmpty) {
-        // Proceed to home screen
-        Navigator.pushNamed(context, '/Home');
-      } else {
-        showAlertDialog("Missing Password", "Please enter your password.");
-      }
-    } else {
+  void handleSignIn() async {
+    final emailOrPhone = emailOrPhoneController.text.trim();
+    final password = passwordController.text;
+
+    // Validate email/phone
+    if (!emailRegex.hasMatch(emailOrPhone) &&
+        !phoneRegex.hasMatch(emailOrPhone)) {
       showAlertDialog(
-          "Invalid Input", "Please enter a valid email or phone number.");
+        "Invalid Input",
+        "Please enter a valid email or phone number.",
+      );
+      return;
+    }
+
+    // Validate password
+    if (password.isEmpty) {
+      showAlertDialog("Missing Password", "Please enter your password.");
+      return;
+    }
+
+    // Show loading indicator
+    setState(() {
+    FocusScope.of(context).unfocus();
+      _isLoading = true;
+    });
+
+    try {
+      if (emailRegex.hasMatch(emailOrPhone)) {
+        final result = await SigninApi(emailOrPhone, password);
+
+       if (result.isSuccess) {
+          // Navigate to home and remove all previous routes (sign-in, auth)
+          Navigator.pushNamedAndRemoveUntil(context, '/Home', (route) => false);
+        }
+ else {
+          showAlertDialog(
+            "Sign-In Failed",
+            result.message ?? "An unknown error occurred.",
+          );
+        }
+      } else {
+        showAlertDialog("Sign-In Failed", "Invalid Email");
+      }
+    } catch (error) {
+      showAlertDialog("Error", "An error occurred: $error");
+    } finally {
+      // Hide loading indicator
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
+
 
   void showAlertDialog(String heading, String message) {
     FocusScope.of(context).unfocus();
@@ -114,8 +155,7 @@ class _SignInScreenState extends State<SignInScreen> {
             child: Column(
               children: [
                 buildTextInput(
-                    controller: emailOrPhoneController,
-                    hintText: "Email"),
+                    controller: emailOrPhoneController, hintText: "Email"),
                 const SizedBox(height: 20),
                 buildPasswordInput(),
                 const SizedBox(height: 20),
@@ -124,7 +164,7 @@ class _SignInScreenState extends State<SignInScreen> {
                   color: Colors.transparent, // Makes Material transparent
                   child: InkWell(
                     onTap: () {
-                      handleSignIn;
+                      handleSignIn();
                     },
                     borderRadius: BorderRadius.circular(8),
                     child: Container(
@@ -178,6 +218,15 @@ class _SignInScreenState extends State<SignInScreen> {
               ],
             ),
           ),
+          if (_isLoading)
+            Container(
+              color: Colors.black.withOpacity(0.5), // Dim background
+              child: const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              ),
+            ),
           if (showAlert)
             AlertMessage(
               heading: alertHeading,

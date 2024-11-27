@@ -1,4 +1,3 @@
-// import 'package:Pulse/api/apiComponent.dart';
 // import 'package:Pulse/screens/auth_screens.dart';
 // import 'package:Pulse/screens/signin_screen.dart';
 // import 'package:Pulse/screens/signup_screen.dart';
@@ -8,18 +7,6 @@
 
 // void main() {
 //   runApp(const MyApp());
-//   _checkLoginStatus();
-// }
-
-// bool isLoggedIn = false; // Nullable to indicate loading state
-
-// Future<void> _checkLoginStatus() async {
-//   try {
-//     bool loggedIn = await autoLogin(); // Wait for autoLogin result
-//     isLoggedIn = loggedIn; // Update isLoggedIn state
-//   } catch (e) {
-//     isLoggedIn = false; // Default to not logged in on error
-//   }
 // }
 
 // class MyApp extends StatefulWidget {
@@ -30,7 +17,6 @@
 // }
 
 // class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
-
 //   @override
 //   void initState() {
 //     super.initState();
@@ -63,49 +49,21 @@
 
 //   @override
 //   Widget build(BuildContext context) {
-//     print(isLoggedIn);
-//     print("from app");
-
 //     // Update initialRoute based on login status
-//     if (!isLoggedIn) {
-//       return MaterialApp(
-//         title: 'Flutter Auth Demo',
-//         theme: ThemeData(
-//           primarySwatch: Colors.blue,
-//         ),
-//         initialRoute: '/',
-//         routes: {
-//           '/': (context) => const AuthScreen(),
-//           '/signup': (context) => const CreateAccountScreen(),
-//           '/signin': (context) => const SignInScreen(),
-//           '/Home': (context) => const HomeScreen(),
-//         },
-//       );
-//     }
-//     if (isLoggedIn) {
-//       return MaterialApp(
-//         title: 'Flutter Auth Demo',
-//         theme: ThemeData(
-//           primarySwatch: Colors.blue,
-//         ),
-//         initialRoute: '/Home',
-//         routes: {
-//           // '/': (context) => const AuthScreen(),
-//           // '/signup': (context) => const CreateAccountScreen(),
-//           // '/signin': (context) => const SignInScreen(),
-//           '/Home': (context) => const HomeScreen(),
-//         },
-//       );
 
-//     } else {
-//       return const MaterialApp(
-//         home: Scaffold(
-//           body: Center(
-//             child: CircularProgressIndicator(), // Show loading indicator
-//           ),
-//         ),
-//       );
-//     }
+//     return MaterialApp(
+//       title: 'Flutter Auth Demo',
+//       theme: ThemeData(
+//         primarySwatch: Colors.blue,
+//       ),
+//       initialRoute: '/Home',
+//       routes: {
+//         '/': (context) => const AuthScreen(),
+//         '/signup': (context) => const CreateAccountScreen(),
+//         '/signin': (context) => const SignInScreen(),
+//         '/Home': (context) => const HomeScreen(),
+//       },
+//     );
 //   }
 // }
 

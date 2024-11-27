@@ -1,7 +1,36 @@
+import 'package:Pulse/api/apiComponent.dart';
+import 'package:Pulse/screens/widgets/component/alert_message.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
-class EditProfileScreen extends StatelessWidget {
-  const EditProfileScreen({super.key});
+class EditProfileScreen extends StatefulWidget {
+  final dynamic globalUser;
+
+  const EditProfileScreen({super.key, required this.globalUser});
+
+  @override
+  State<EditProfileScreen> createState() => _EditProfileScreenState();
+}
+
+class _EditProfileScreenState extends State<EditProfileScreen> {
+  late final dynamic user;
+
+  @override
+  void initState() {
+    super.initState();
+    user = widget.globalUser;
+  }
+
+  void copyClipComponent(String value, BuildContext context) {
+    Clipboard.setData(ClipboardData(text: value)).then((_) {
+      // Show a snackbar or a dialog to indicate the text was copied
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Copied to clipboard!')),
+      );
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,7 +48,7 @@ class EditProfileScreen extends StatelessWidget {
         ),
         centerTitle: true,
         title: const Text(
-          'Edit Profile', // Title of the screen
+          'Edit Profile',
           style: TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.bold,
@@ -28,52 +57,45 @@ class EditProfileScreen extends StatelessWidget {
       ),
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
-      
         child: Column(
-          
           children: [
-            
             const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Change photo button
-                _buildProfileOption(
-                    'Change photo',
-                    'https://th.bing.com/th/id/OIP.MtGd0GcHiXFMqidnBh8UngHaE8?rs=1&pid=ImgDetMain',
-                    screenSize),
-                const SizedBox(width: 48), // Spacing between photo and video
-                // Change video button
-                _buildProfileOption('Change video', null, screenSize,
-                    isVideo: true),
+                _buildProfileOption('Change photo',
+                    user['profile_picture'].toString(), screenSize),
               ],
             ),
             const SizedBox(height: 32),
-            // Editable fields for Name, Username, Bio, and Social Links
-            _buildEditableField('Name', 'Jacob West', screenSize, context),
-            _buildEditableField('Username', 'jacob_w', screenSize, context),
-            _buildNonEditableField('tiktok.com/@jacob_w', screenSize),
             _buildEditableField(
-                'Bio', 'Add a bio to your profile', screenSize, context),
-            const Divider(thickness: 1), // Divider between Bio and social links
-            _buildEditableField('Instagram', 'Add Instagram to your profile',
+                'Name', user['full_name'].toString(), screenSize, context),
+            _buildEditableField(
+                'Username', user['username'].toString(), screenSize, context),
+            _buildNonEditableField('pulse.com/@${user['username']}',
                 screenSize, context),
             _buildEditableField(
-                'YouTube', 'Add YouTube to your profile', screenSize, context),
+                'Bio',
+                user['bio'].toString() == 'null'
+                    ? 'Add a bio to your profile'
+                    : user['bio'].toString(),
+                screenSize,
+                context),
           ],
         ),
       ),
     );
   }
 
-  // Method to build the profile option (Change Photo/Video)
   Widget _buildProfileOption(String label, String? imageUrl, Size screenSize,
       {bool isVideo = false}) {
     return Column(
       children: [
         CircleAvatar(
           radius: screenSize.width * 0.12,
-          backgroundImage: imageUrl != null ? NetworkImage(imageUrl) : null,
+          backgroundImage: imageUrl == 'null'
+              ? const AssetImage('assets/appImages/emptyProfile.jpg')
+              : NetworkImage(imageUrl!),
           backgroundColor: imageUrl == null ? Colors.grey[300] : null,
           child: isVideo
               ? const Icon(Icons.videocam, color: Colors.black, size: 30)
@@ -91,7 +113,6 @@ class EditProfileScreen extends StatelessWidget {
     );
   }
 
-  // Helper function to build editable fields
   Widget _buildEditableField(
       String title, String value, Size screenSize, BuildContext context) {
     return ListTile(
@@ -113,7 +134,12 @@ class EditProfileScreen extends StatelessWidget {
         Navigator.of(context).push(
           PageRouteBuilder(
             pageBuilder: (context, animation, secondaryAnimation) =>
-                EditDetailScreen(title: title, initialValue: value),
+                EditDetailScreen(
+              title: title,
+              initialValue: value,
+              userId: user['unique_user_key'],
+              prevUsername: user['username'], // Pass the user ID here
+            ),
             transitionsBuilder:
                 (context, animation, secondaryAnimation, child) {
               const begin = Offset(1.0, 0.0); // Start from the right
@@ -135,8 +161,9 @@ class EditProfileScreen extends StatelessWidget {
     );
   }
 
-  // Helper function to build non-editable fields (like the TikTok profile link)
-  Widget _buildNonEditableField(String value, Size screenSize) {
+  // Non-editable field with the copy button
+  Widget _buildNonEditableField(
+      String value, Size screenSize, BuildContext context) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: screenSize.width * 0.06),
       child: Row(
@@ -153,7 +180,8 @@ class EditProfileScreen extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.copy, color: Colors.grey, size: 16),
             onPressed: () {
-              // Add copy functionality here
+              // Call the copyClipComponent to copy the text to clipboard
+              copyClipComponent(value, context);
             },
           ),
         ],
@@ -162,18 +190,107 @@ class EditProfileScreen extends StatelessWidget {
   }
 }
 
-// New screen for editing details
-class EditDetailScreen extends StatelessWidget {
+class EditDetailScreen extends StatefulWidget {
   final String title;
   final String initialValue;
-
+  final String userId; // Add the userId for API update
+  final String prevUsername;
   const EditDetailScreen(
-      {super.key, required this.title, required this.initialValue});
+      {super.key,
+      required this.title,
+      required this.initialValue,
+      required this.userId, // Initialize userId
+      required this.prevUsername});
+
+  @override
+  _EditDetailScreenState createState() => _EditDetailScreenState();
+}
+
+class _EditDetailScreenState extends State<EditDetailScreen> {
+  late TextEditingController controller;
+  bool isUsernameValid = true;
+  String errorMessage = '';
+  bool showAlert = false;
+  bool useraval = false;
+  bool newuseraval = false;
+  String useravaltxt = "";
+  String? prevuser;
+  @override
+  void initState() {
+    super.initState();
+    prevuser = widget.prevUsername;
+    controller = TextEditingController(text: widget.initialValue);
+  }
+
+  Future<void> validateUsername(String username) async {
+    if (username.isEmpty) {
+      setState(() {
+        isUsernameValid = false;
+        useraval = false;
+        errorMessage = 'Username must not be empty.';
+      });
+      return;
+    }
+
+    // Check if the username contains any spaces
+    if (username.contains(' ')) {
+      setState(() {
+        isUsernameValid = false;
+        useraval = false;
+        errorMessage = 'Username must not contain spaces.';
+      });
+      return;
+    }
+
+    // Check for minimum length
+    if (username.length < 5) {
+      setState(() {
+        isUsernameValid = false;
+        useraval = false;
+        errorMessage = 'Username must be at least 5 characters long.';
+      });
+      return;
+    }
+
+    // Check if username matches the previous one
+    if (username == prevuser) {
+      setState(() {
+        isUsernameValid = true;
+        useravaltxt = "current username";
+        useraval = true;
+        errorMessage = '';
+      });
+      return;
+    }
+
+    // Check availability of the username
+    final result = await checkUsername(username: username);
+
+    if (result.containsKey('error')) {
+      setState(() {
+        isUsernameValid = false;
+        useraval = false;
+        errorMessage = result['error'];
+      });
+    } else if (result['available'] == false) {
+      setState(() {
+        useraval = false;
+        isUsernameValid = result['available'];
+        errorMessage = 'username is already taken';
+      });
+    } else {
+      setState(() {
+        isUsernameValid = result['available'];
+        useraval = true;
+        useravaltxt = "available";
+        newuseraval = true;
+        errorMessage = '';
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    final TextEditingController controller =
-        TextEditingController(text: initialValue);
     Size screenSize = MediaQuery.of(context).size;
 
     return Scaffold(
@@ -188,7 +305,7 @@ class EditDetailScreen extends StatelessWidget {
         ),
         centerTitle: true,
         title: Text(
-          'Edit $title',
+          'Edit ${widget.title}',
           style: const TextStyle(
             color: Colors.black,
             fontWeight: FontWeight.bold,
@@ -198,39 +315,98 @@ class EditDetailScreen extends StatelessWidget {
       backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.all(16.0),
-        
         child: Column(
           children: [
-            TextField(
-              controller: controller,
-              decoration: InputDecoration(hintText: 'Enter new $title'),
+            // TextField for input
+            Row(
+              children: [
+                // Show tick/cross icon based on username validity
+                if (widget.title == 'Username') ...[
+                  Icon(
+                    isUsernameValid ? Icons.check : Icons.close,
+                    color: isUsernameValid ? Colors.green : Colors.red,
+                  ),
+                  const SizedBox(width: 8),
+                ],
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    decoration: InputDecoration(
+                        hintText: 'Enter new ${widget.title}',
+                        errorText: isUsernameValid ? null : errorMessage,
+                        labelText: useraval ? useravaltxt : null,
+                        labelStyle: const TextStyle(color: Colors.green)),
+                    onChanged: (value) {
+                      if (widget.title == 'Username') {
+                        validateUsername(value); // Validate username on change
+                      }
+                    },
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 20),
-            OutlinedButton(
-              
-              style: OutlinedButton.styleFrom(
-                fixedSize: Size(screenSize.width * 0.35, 50), // Fixed width
-                side: const BorderSide(
-                    color: Color.fromARGB(255, 100, 99, 99)), // Border color
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10), // Rounded corners
+            // Save button
+              OutlinedButton(
+                style: OutlinedButton.styleFrom(
+                  fixedSize: Size(screenSize.width * 0.35, 50),
+                  side:
+                      const BorderSide(color: Color.fromARGB(255, 100, 99, 99)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
                 ),
-                padding: const EdgeInsets.symmetric(
-                    vertical: 12), // Vertical padding
-              ).copyWith(
-                foregroundColor: WidgetStateProperty.all(
-                    Colors.black), // Change text color
-              ),
-              onPressed: () {
-                // Handle saving the new value
-                Navigator.of(context)
-                    .pop(controller.text); // Pass the new value back
-              },
-              child: const Text('Save'),
-            ),
+                onPressed: () async {
+                  // Handle saving the new value
+                  String updatedValue = controller.text;
+
+                  if (!isUsernameValid) {
+                    setState(() {
+                      showAlert = true; // Show alert if username is invalid
+                    });
+                    return;
+                  }
+
+                  // Update the profile based on the title
+                  if (widget.title == 'Name') {
+                    await updateUserProfile(
+                        widget.userId, updatedValue, '', '');
+                  } else if (widget.title == 'Username') {
+                    await updateUserProfile(
+                        widget.userId, '', updatedValue, '');
+                  } else if (widget.title == 'Bio') {
+                    await updateUserProfile(
+                        widget.userId, '', '', updatedValue);
+                  }
+
+                  Navigator.of(context)
+                      .pop(updatedValue); // Pass the new value back
+                },
+                child: const Text('Save'),
+      ),
+             
           ],
         ),
       ),
+      // Alert Message Component
+      floatingActionButton: showAlert
+          ? AlertMessage(
+              heading: 'Invalid Username',
+              message: errorMessage,
+              setShowAlert: (value) {
+                setState(() {
+                  showAlert = value;
+                });
+              },
+              showAlert: showAlert,
+              triggerFunction: () {
+                setState(() {
+                  showAlert = false;
+                });
+              },
+            )
+          : null,
     );
   }
 }
