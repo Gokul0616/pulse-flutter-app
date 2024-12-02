@@ -50,8 +50,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           profileImagePath = pickedFile.path;
         });
         final result = await uploadProfileImage(
-            profileImagePath: profileImagePath!, userId: user['unique_user_key']);
-                  await updateUserProfile(user['unique_user_key'] , '', '', '',result['imageUrl']);
+            profileImagePath: profileImagePath!,
+            userId: user['unique_user_key']);
+        await updateUserProfile(
+            user['unique_user_key'], '', '', '', result['imageUrl']);
 
         setState(() {
           profileimagepath = result['imageUrl'];
@@ -78,7 +80,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
-
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.white,
@@ -148,7 +149,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               pickImage, // Trigger pickImage when the profile picture is tapped
           child: CircleAvatar(
             radius: screenSize.width * 0.12,
-            backgroundImage: imageUrl == 'null'
+            backgroundImage: user['profile_picture'].isEmpty
                 ? const AssetImage('assets/appImages/emptyProfile.jpg')
                 : NetworkImage(imageUrl!),
             backgroundColor: imageUrl == null ? Colors.grey[300] : null,
@@ -425,11 +426,14 @@ class _EditDetailScreenState extends State<EditDetailScreen> {
 
                 // Update the profile based on the title
                 if (widget.title == 'Name') {
-                  await updateUserProfile(widget.userId, updatedValue, '', '','');
+                  await updateUserProfile(
+                      widget.userId, updatedValue, '', '', '');
                 } else if (widget.title == 'Username') {
-                  await updateUserProfile(widget.userId, '', updatedValue, '','');
+                  await updateUserProfile(
+                      widget.userId, '', updatedValue, '', '');
                 } else if (widget.title == 'Bio') {
-                  await updateUserProfile(widget.userId, '', '', updatedValue,'');
+                  await updateUserProfile(
+                      widget.userId, '', '', updatedValue, '');
                 }
 
                 Navigator.of(context)

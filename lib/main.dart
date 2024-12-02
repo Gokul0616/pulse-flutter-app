@@ -73,7 +73,6 @@ import 'package:Pulse/screens/auth_screens.dart';
 import 'package:Pulse/screens/signin_screen.dart';
 import 'package:Pulse/screens/signup_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'screens/home_screen.dart';
 
 void main() {
@@ -94,7 +93,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _setImmersiveMode();
+    // _setImmersiveMode();
     // Initialize the login status check
     _loginStatusFuture = _checkLoginStatus();
   }
@@ -113,21 +112,21 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     super.dispose();
   }
 
-  @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
-      _setImmersiveMode();
-    }
-  }
+  // @override
+  // void didChangeAppLifecycleState(AppLifecycleState state) {
+  //   if (state == AppLifecycleState.resumed) {
+  //     _setImmersiveMode();
+  //   }
+  // }
 
-  void _setImmersiveMode() {
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.transparent,
-      systemNavigationBarColor: Colors.transparent,
-      systemNavigationBarIconBrightness: Brightness.light,
-      statusBarIconBrightness: Brightness.light,
-    ));
-  }
+  // void _setImmersiveMode() {
+  //   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+  //     statusBarColor: Colors.transparent,
+  //     systemNavigationBarColor: Colors.transparent,
+  //     systemNavigationBarIconBrightness: Brightness.light,
+  //     statusBarIconBrightness: Brightness.light,
+  //   ));
+  // }
 
   @override
   Widget build(BuildContext context) {

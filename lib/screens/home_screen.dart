@@ -40,18 +40,18 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     // Set up transparent status bar and navigation bar on app start
-    _setTransparentUI();
+    // _setTransparentUI();
   }
 
-  void _setTransparentUI() {
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-      statusBarColor: Colors.black,
-      systemNavigationBarColor: Colors.black,
-      statusBarIconBrightness: Brightness.light,
-      systemNavigationBarIconBrightness: Brightness.light,
-    ));
-  }
+  // void _setTransparentUI() {
+  //   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  //   SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+  //     statusBarColor: Colors.black,
+  //     systemNavigationBarColor: Colors.black,
+  //     statusBarIconBrightness: Brightness.light,
+  //     systemNavigationBarIconBrightness: Brightness.light,
+  //   ));
+  // }
 
   void _navigateToAddPostWithAnimation(BuildContext context) {
     Navigator.of(context).push(

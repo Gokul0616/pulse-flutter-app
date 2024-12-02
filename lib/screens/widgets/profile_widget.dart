@@ -1,6 +1,5 @@
 import 'package:Pulse/api/apiComponent.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:Pulse/screens/widgets/component/edit_profile_screen.dart';
 
 class ProfileWidget extends StatefulWidget {
@@ -39,7 +38,6 @@ class _ProfileWidgetState extends State<ProfileWidget> {
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
 
-    const storage = FlutterSecureStorage();
     if (globalUser.isEmpty) {
       return const Scaffold(
           backgroundColor: Colors.white,
@@ -97,7 +95,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                     ? NetworkImage(globalUser['profile_picture'])
                     : const AssetImage('assets/appImages/emptyProfile.jpg')
                         as ImageProvider,
-                radius: screenSize.width * 0.1,
+                radius: screenSize.width * 0.12,
               ),
 
               Text(
@@ -209,7 +207,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
             borderRadius: BorderRadius
                 .zero, // Ensure the corners are square (no rounding)
           ),
-          backgroundColor: Colors.white,
+          backgroundColor: Colors.white,width: screenSize.width * 0.7,
           child: ListView(
             padding: EdgeInsets.zero,
             children: <Widget>[
