@@ -21,7 +21,6 @@ class _ProfileWidgetState extends State<ProfileWidget> {
 
   // Declare the global variable
   Map<String, dynamic> globalUser = {};
-
   void _triggerComponent() async {
     final userDetails = await fetchUserDetails();
     final user = userDetails['user']; // Get the user details from the response
@@ -35,10 +34,11 @@ class _ProfileWidgetState extends State<ProfileWidget> {
     }
   }
 
+
   @override
   Widget build(BuildContext context) {
-
     final screenSize = MediaQuery.of(context).size;
+
     const storage = FlutterSecureStorage();
     if (globalUser.isEmpty) {
       return const Scaffold(
@@ -135,7 +135,7 @@ class _ProfileWidgetState extends State<ProfileWidget> {
                     Navigator.of(context).push(
                       PageRouteBuilder(
                         pageBuilder: (context, animation, secondaryAnimation) =>
-                            EditProfileScreen(globalUser:  globalUser),
+                            EditProfileScreen(globalUser: globalUser),
                         transitionsBuilder:
                             (context, animation, secondaryAnimation, child) {
                           const begin = Offset(1.0, 0.0);

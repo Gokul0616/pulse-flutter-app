@@ -26,6 +26,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   final TextEditingController dobController = TextEditingController();
   final TextEditingController genderController = TextEditingController();
   String profileimagepath = "";
+  String profileimagekey = "";
   String step = "enterPhoneOrEmail";
   bool showPassword = false;
   String? profileImagePath;
@@ -111,9 +112,10 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
           profileImagePath = pickedFile.path;
         });
         final result = await uploadProfileImage(
-            profileImagePath: profileImagePath, userId: "001");
+            profileImagePath: profileImagePath!, userId:"" );
         setState(() {
-          profileimagepath = result['imagePath'];
+          profileimagepath = result['imageUrl'];
+          profileimagekey = result['imageUuid'];
           isLoading = false;
         });
       } else {
@@ -298,6 +300,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
           // phone: emailOrPhoneController.text,
           password: passwordController.text,
           fullName: fullNameController.text,
+          profilePicture_key: profileimagekey,
           profilepath: profileimagepath,
           dob: dobController.text,
         );

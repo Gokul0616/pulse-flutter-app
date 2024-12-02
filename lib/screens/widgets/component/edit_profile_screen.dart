@@ -2,6 +2,8 @@ import 'package:Pulse/api/apiComponent.dart';
 import 'package:Pulse/screens/widgets/component/alert_message.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final dynamic globalUser;
@@ -15,6 +17,12 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   late final dynamic user;
 
+  String? profileImagePath;
+  String profileimagepath = "";
+  bool isLoading = false;
+  bool showAlert = false;
+  String alertMessage = "";
+  String alertHeading = "";
   @override
   void initState() {
     super.initState();
@@ -27,6 +35,43 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Copied to clipboard!')),
       );
+    });
+  }
+
+  Future<void> pickImage() async {
+    var status = await Permission.storage.request();
+
+    if (status.isGranted) {
+      final pickedFile =
+          await ImagePicker().pickImage(source: ImageSource.gallery);
+      if (pickedFile != null) {
+        setState(() {
+          isLoading = true;
+          profileImagePath = pickedFile.path;
+        });
+        final result = await uploadProfileImage(
+            profileImagePath: profileImagePath!, userId: user['unique_user_key']);
+                  await updateUserProfile(user['unique_user_key'] , '', '', '',result['imageUrl']);
+
+        setState(() {
+          profileimagepath = result['imageUrl'];
+          isLoading = false;
+        });
+      } else {
+        showAlertDialog("No Image Selected", "Please select an image.");
+      }
+    } else if (status.isDenied || status.isPermanentlyDenied) {
+      showAlertDialog("Permission Denied",
+          "Storage access permission is required to pick an image.");
+    }
+  }
+
+  void showAlertDialog(String heading, String message) {
+    FocusScope.of(context).unfocus();
+    setState(() {
+      showAlert = true;
+      alertHeading = heading;
+      alertMessage = message;
     });
   }
 
@@ -57,6 +102,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
+            if (isLoading)
+              Container(
+                color: Colors.black.withOpacity(0.5), // Dim background
+                child: const Center(
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                  ),
+                ),
+              ),
             const SizedBox(height: 24),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -70,8 +124,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 'Name', user['full_name'].toString(), screenSize, context),
             _buildEditableField(
                 'Username', user['username'].toString(), screenSize, context),
-            _buildNonEditableField('pulse.com/@${user['username']}',
-                screenSize, context),
+            _buildNonEditableField(
+                'pulse.com/@${user['username']}', screenSize, context),
             _buildEditableField(
                 'Bio',
                 user['bio'].toString() == 'null'
@@ -89,15 +143,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       {bool isVideo = false}) {
     return Column(
       children: [
-        CircleAvatar(
-          radius: screenSize.width * 0.12,
-          backgroundImage: imageUrl == 'null'
-              ? const AssetImage('assets/appImages/emptyProfile.jpg')
-              : NetworkImage(imageUrl!),
-          backgroundColor: imageUrl == null ? Colors.grey[300] : null,
-          child: isVideo
-              ? const Icon(Icons.videocam, color: Colors.black, size: 30)
-              : null,
+        GestureDetector(
+          onTap:
+              pickImage, // Trigger pickImage when the profile picture is tapped
+          child: CircleAvatar(
+            radius: screenSize.width * 0.12,
+            backgroundImage: imageUrl == 'null'
+                ? const AssetImage('assets/appImages/emptyProfile.jpg')
+                : NetworkImage(imageUrl!),
+            backgroundColor: imageUrl == null ? Colors.grey[300] : null,
+            child: isVideo
+                ? const Icon(Icons.videocam, color: Colors.black, size: 30)
+                : null,
+          ),
         ),
         const SizedBox(height: 8),
         Text(
@@ -345,45 +403,40 @@ class _EditDetailScreenState extends State<EditDetailScreen> {
             ),
             const SizedBox(height: 20),
             // Save button
-              OutlinedButton(
-                style: OutlinedButton.styleFrom(
-                  fixedSize: Size(screenSize.width * 0.35, 50),
-                  side:
-                      const BorderSide(color: Color.fromARGB(255, 100, 99, 99)),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+            OutlinedButton(
+              style: OutlinedButton.styleFrom(
+                fixedSize: Size(screenSize.width * 0.35, 50),
+                side: const BorderSide(color: Color.fromARGB(255, 100, 99, 99)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                onPressed: () async {
-                  // Handle saving the new value
-                  String updatedValue = controller.text;
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+              onPressed: () async {
+                // Handle saving the new value
+                String updatedValue = controller.text;
 
-                  if (!isUsernameValid) {
-                    setState(() {
-                      showAlert = true; // Show alert if username is invalid
-                    });
-                    return;
-                  }
+                if (!isUsernameValid) {
+                  setState(() {
+                    showAlert = true; // Show alert if username is invalid
+                  });
+                  return;
+                }
 
-                  // Update the profile based on the title
-                  if (widget.title == 'Name') {
-                    await updateUserProfile(
-                        widget.userId, updatedValue, '', '');
-                  } else if (widget.title == 'Username') {
-                    await updateUserProfile(
-                        widget.userId, '', updatedValue, '');
-                  } else if (widget.title == 'Bio') {
-                    await updateUserProfile(
-                        widget.userId, '', '', updatedValue);
-                  }
+                // Update the profile based on the title
+                if (widget.title == 'Name') {
+                  await updateUserProfile(widget.userId, updatedValue, '', '','');
+                } else if (widget.title == 'Username') {
+                  await updateUserProfile(widget.userId, '', updatedValue, '','');
+                } else if (widget.title == 'Bio') {
+                  await updateUserProfile(widget.userId, '', '', updatedValue,'');
+                }
 
-                  Navigator.of(context)
-                      .pop(updatedValue); // Pass the new value back
-                },
-                child: const Text('Save'),
-      ),
-             
+                Navigator.of(context)
+                    .pop(updatedValue); // Pass the new value back
+              },
+              child: const Text('Save'),
+            ),
           ],
         ),
       ),

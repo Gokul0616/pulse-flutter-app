@@ -68,10 +68,19 @@ Future<dynamic> PhoneOrEmailValidateApi({String? email, String? phone}) async {
 }
 
 // Function to upload profile image with dynamic content type based on file extension
-Future<dynamic> uploadProfileImage(
-    {String? profileImagePath, String? userId}) async {
-  if (profileImagePath == null || profileImagePath.isEmpty) {
+Future<dynamic> uploadProfileImage({
+  required String profileImagePath,
+  required String userId,
+}) async {
+  if (profileImagePath.isEmpty) {
     print("No image selected. Please select an image first.");
+    return;
+  }
+  // Get profile key
+
+  final profileKey = await getUserProfileKey(userId);
+  if (profileKey == null) {
+    print("Unable to fetch or generate profile key.");
     return;
   }
 
@@ -95,22 +104,17 @@ Future<dynamic> uploadProfileImage(
     );
     request.files.add(file);
 
-    // Add other fields (e.g., user_id)
-    if (userId != null && userId.isNotEmpty) {
-      request.fields['user_id'] = userId; // Dynamically pass the user_id
-    } else {
-      print("No user ID provided.");
-    }
+    // Add the profile key to the request
+    request.fields['profile_key'] = profileKey;
 
     // Send the request
     var response = await request.send();
 
     if (response.statusCode == 200) {
-      // Optionally: Parse the response to get the uploaded file details if needed
+      // Parse the response
       var responseData = await http.Response.fromStream(response);
       return jsonDecode(responseData.body);
     } else {
-      // Log the response status code and body for further investigation
       print("Upload Failed: ${response.statusCode}");
       var responseData = await http.Response.fromStream(response);
       print('Response Body: ${responseData.body}');
@@ -118,6 +122,39 @@ Future<dynamic> uploadProfileImage(
   } catch (e) {
     print("Error uploading image: $e");
   }
+}
+
+Future<String?> getUserProfileKey(String? userId) async {
+  try {
+    // Backend API endpoint to fetch or generate profile key
+    final url = Uri.parse('$commonUrl/user/profile-key');
+    // Make a POST request with the user ID
+    final response = await http.post(
+      url,
+      body: {'user_id': userId},
+    );
+
+    if (response.statusCode == 200) {
+      // Parse the response
+      final responseData = jsonDecode(response.body);
+      // Check if profile key exists
+      if (responseData['profile_key'] != null) {
+        return responseData['profile_key'];
+      } else if (responseData['uuid'] != null) {
+        // Fallback to UUID if profile key is not available
+        return responseData['uuid'];
+      } else {
+        print("No profile key or UUID returned from the server.");
+      }
+    } else {
+      print("Failed to fetch profile key. Status code: ${response.statusCode}");
+      print("Response Body: ${response.body}");
+    }
+  } catch (e) {
+    print("Error fetching profile key: $e");
+  }
+
+  return null; // Return null if the key couldn't be fetched
 }
 
 // Function to check if a username is available
@@ -163,13 +200,18 @@ Future<dynamic> SignupApi({
   required String fullName, // Optional field
   required String dob,
   String? profilepath, // Optional field for profile image
+  String? profilePicture_key,
   String? gender, // Optional field for gender
 }) async {
+  if (profilePicture_key!.isEmpty) {
+    profilePicture_key = await getUserProfileKey("");
+    print(profilePicture_key);
+  }
+
   final url = Uri.parse('$commonUrl/signup');
   String? finalProfilePath;
   if (profilepath != null && profilepath.isNotEmpty) {
-    finalProfilePath =
-        '$commonUrl2/$profilepath'; // Assuming profilepath is the relative path
+    finalProfilePath = profilepath;
   } else {
     finalProfilePath = null; // Or set a default path if needed
   }
@@ -224,6 +266,7 @@ Future<dynamic> SignupApi({
       "full_name": fullName,
       "timezone": timezone,
       "profilepath": finalProfilePath,
+      "profileimagekey": profilePicture_key,
       "country":
           country ?? "Unknown", // Fallback to 'Unknown' if no country found
     };
@@ -348,8 +391,8 @@ Future<dynamic> fetchUserDetails() async {
 
 // Function to send updated data to the backend API
 
-Future<void> updateUserProfile(
-    String userId, String fullName, String username, String bio) async {
+Future<void> updateUserProfile(String userId, String fullName, String username,
+    String bio, String profileUrl) async {
   final url = Uri.parse('$commonUrl/user-updateprofile');
 
   // Create the request body
@@ -357,6 +400,7 @@ Future<void> updateUserProfile(
     'full_name': fullName,
     'username': username,
     'bio': bio,
+    'profile_picture': profileUrl
   };
 
   // Send the PUT request to update the user profile
